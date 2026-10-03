@@ -1,0 +1,659 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Re:Learn Physics</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F4F6F9;--grid:#E4E9F0;--surface:#FFFFFF;--surface2:#F7F9FC;--ink:#14213A;--muted:#5C6B80;--line:#D9E0EA;
+  --accent:#E2483D;--accent-soft:#FDECEA;--blue:#2C6BED;--blue-soft:#E8EFFE;--ok:#1C8550;--ok-soft:#E5F5EC;
+  --warn:#A8620B;--warn-soft:#FDF3E3;--shadow:0 1px 2px rgba(20,33,58,.06),0 8px 24px rgba(20,33,58,.06);
+}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){
+  --bg:#0E1420;--grid:#161E2C;--surface:#151D2B;--surface2:#1B2536;--ink:#E8EDF5;--muted:#93A1B5;--line:#2A3548;
+  --accent:#FF6B5E;--accent-soft:#3A1E1D;--blue:#6E9BFF;--blue-soft:#1A2744;--ok:#4CC488;--ok-soft:#14301F;
+  --warn:#F0B35A;--warn-soft:#33260F;--shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.55 "Public Sans",system-ui,sans-serif;color:var(--ink);background-color:var(--bg);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px}
+h1,h2,h3,.display{font-family:"Bricolage Grotesque",system-ui,sans-serif;letter-spacing:-.01em}
+.wrap{max-width:1140px;margin:0 auto;padding:0 20px}
+.hidden{display:none!important}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:6px}
+button{font:600 1rem "Public Sans",sans-serif;cursor:pointer;border:0;border-radius:10px;padding:12px 20px;
+  background:var(--ink);color:var(--bg);transition:transform .12s,opacity .12s}
+button:hover{transform:translateY(-1px)}button:active{transform:none}
+button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+button.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+button.accent{background:var(--accent);color:#fff}
+.kicker{font-size:.78rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.err{color:var(--accent);font-size:.9rem;min-height:1.3em;margin:8px 0 0}
+small,.muted{color:var(--muted)}
+
+/* top bar */
+.bar{display:flex;align-items:center;gap:16px;padding:18px 0}
+.logo{font:800 1.45rem "Bricolage Grotesque",sans-serif;display:flex;align-items:center;gap:8px}
+.logo i{display:inline-block;width:22px;height:22px;border-radius:50%;background:var(--accent);position:relative}
+.logo i::after{content:"";position:absolute;left:6px;top:6px;width:10px;height:10px;border-radius:50%;background:var(--bg)}
+.dots{display:flex;gap:6px;margin-left:auto}
+.dots span{width:28px;height:6px;border-radius:3px;background:var(--line)}
+.dots .now{background:var(--ink)}.dots .ok{background:var(--ok)}.dots .mis{background:var(--accent)}.dots .fixed{background:var(--blue)}
+.who{font-size:.9rem;color:var(--muted)}
+
+/* welcome */
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;padding:40px 0 56px}
+.hero h1{font-size:clamp(2.3rem,5vw,3.6rem);line-height:1.02;margin:0 0 18px;font-weight:800}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero .lead{font-size:1.12rem;color:var(--muted);max-width:46ch;margin:0 0 28px}
+.join{display:flex;gap:10px;max-width:440px}
+.join input{flex:1;min-width:0;font:inherit;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:40px;max-width:560px}
+.steps div{font-size:.9rem;color:var(--muted)}
+.steps b{display:block;font:700 1rem "Bricolage Grotesque",sans-serif;color:var(--ink);margin-bottom:2px}
+.steps b span{color:var(--accent);margin-right:6px}
+.demo{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:var(--shadow)}
+.demo .q{font-weight:600;margin:0 0 14px}
+.student{display:grid;grid-template-columns:38px 1fr;gap:12px;padding:14px;border-radius:12px;background:var(--surface2);margin-bottom:10px}
+.avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#fff}
+.student p{margin:0;font-size:.92rem}
+.student .ans{font-size:.8rem;color:var(--muted)}
+.chip{display:inline-block;font-size:.78rem;font-weight:600;padding:3px 9px;border-radius:999px;margin-top:8px}
+.chip.red{background:var(--accent-soft);color:var(--accent)}.chip.blue{background:var(--blue-soft);color:var(--blue)}
+.chip.green{background:var(--ok-soft);color:var(--ok)}.chip.amber{background:var(--warn-soft);color:var(--warn)}
+.demo .foot{font-size:.88rem;color:var(--muted);margin:12px 2px 0}
+
+/* practice layout */
+.app{display:grid;grid-template-columns:1fr 300px;gap:28px;padding-bottom:60px;align-items:start}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:var(--shadow);margin-bottom:20px;animation:rise .35s ease-out}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.card h2{font-size:1.5rem;line-height:1.25;margin:0 0 20px;font-weight:600}
+.topic{display:inline-block;font-size:.78rem;font-weight:600;padding:3px 10px;border-radius:999px;background:var(--blue-soft);color:var(--blue);margin-bottom:12px}
+.opts{display:grid;gap:10px}
+.opt{display:flex;align-items:center;gap:14px;padding:14px 16px;border:1.5px solid var(--line);border-radius:12px;cursor:pointer;background:var(--surface);transition:border-color .12s,background .12s}
+.opt:hover{border-color:var(--muted)}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt .key{flex:none;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;font-weight:700;font-size:.9rem;background:var(--surface2);border:1px solid var(--line)}
+.opt:has(input:checked){border-color:var(--ink);background:var(--surface2)}
+.opt:has(input:checked) .key{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.opt:has(input:focus-visible){outline:3px solid var(--blue);outline-offset:2px}
+.opt:has(input:disabled){cursor:default}
+.field{margin-top:22px}
+.field>label,.field>.lbl{display:block;font-weight:600;font-size:.95rem;margin-bottom:8px}
+.sure{display:flex;gap:8px;flex-wrap:wrap}
+.sure label{flex:1;min-width:110px;text-align:center;padding:9px 10px;border:1.5px solid var(--line);border-radius:10px;cursor:pointer;font-size:.92rem}
+.sure input{position:absolute;opacity:0;pointer-events:none}
+.sure label:has(input:checked){border-color:var(--ink);background:var(--surface2);font-weight:600}
+.sure label:has(input:focus-visible){outline:3px solid var(--blue);outline-offset:2px}
+textarea{width:100%;font:inherit;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;min-height:88px;resize:vertical;background:var(--surface);color:var(--ink)}
+textarea:disabled{opacity:.7}
+.starters{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.starters button{font:500 .82rem "Public Sans",sans-serif;padding:5px 10px;border-radius:999px;background:var(--surface2);color:var(--muted);border:1px solid var(--line)}
+.actions{display:flex;align-items:center;gap:14px;margin-top:22px;flex-wrap:wrap}
+.hint{font-size:.82rem;color:var(--muted)}
+kbd{font:600 .75rem "Public Sans",sans-serif;padding:1px 6px;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;background:var(--surface2)}
+
+/* verdict + diagnosis */
+.verdict{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;border-radius:14px;margin-bottom:20px}
+.verdict .ic{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:1.1rem}
+.verdict h3{margin:0;font-size:1.25rem}
+.verdict p{margin:2px 0 0;font-size:.95rem}
+.v-ok{background:var(--ok-soft)}.v-ok .ic{background:var(--ok)}
+.v-bad{background:var(--accent-soft)}.v-bad .ic{background:var(--accent)}
+.v-warn{background:var(--warn-soft)}.v-warn .ic{background:var(--warn)}
+.v-blue{background:var(--blue-soft)}.v-blue .ic{background:var(--blue)}
+.mis{border:1.5px dashed var(--accent);border-radius:14px;padding:18px 20px}
+.mis h3{font-size:1.45rem;margin:0 0 4px}
+.mis p{margin:0}
+.meter{display:flex;align-items:center;gap:12px;margin-top:14px;font-size:.85rem;color:var(--muted)}
+.meter .track{flex:1;height:8px;border-radius:4px;background:var(--surface2);border:1px solid var(--line);overflow:hidden}
+.meter .fill{height:100%;width:0;background:var(--accent);border-radius:4px;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.insight{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--surface2);font-size:.92rem}
+.fix p{margin:0 0 14px}
+.sim{position:relative;border:1px solid var(--line);border-radius:14px;background:var(--surface2);overflow:hidden;margin:6px 0 10px}
+.sim canvas{display:block;width:100%;height:220px}
+.sim .replay{position:absolute;right:10px;top:10px;font-size:.8rem;padding:6px 10px;border-radius:8px;background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.caption{font-size:.88rem;color:var(--muted);margin:0 0 16px}
+.example{border-left:4px solid var(--blue);padding:10px 14px;background:var(--blue-soft);border-radius:0 10px 10px 0;font-size:.95rem}
+.result{text-align:center;padding:26px 20px;border-radius:14px;margin-top:20px}
+.result .big{font:800 2.2rem "Bricolage Grotesque",sans-serif;margin:0}
+.result p{margin:6px auto 0;max-width:46ch}
+.pop{animation:pop .5s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}
+
+/* thinking map */
+aside{position:sticky;top:18px}
+aside .card{padding:22px}
+aside h3{margin:0 0 4px;font-size:1.2rem}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 6px}
+.stats div{background:var(--surface2);border-radius:10px;padding:10px 6px;text-align:center}
+.stats b{display:block;font:800 1.5rem "Bricolage Grotesque",sans-serif;line-height:1.1}
+.stats span{font-size:.75rem;color:var(--muted)}
+.idea{padding:12px 0;border-top:1px solid var(--line)}
+.idea:first-of-type{border-top:0}
+.idea .row{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.idea .name{font-weight:600;font-size:.92rem}
+.idea .chip{margin-top:0;flex:none}
+.idea small{display:block;margin-top:2px}
+.empty{font-size:.9rem;color:var(--muted);padding:6px 0}
+
+/* report */
+.report{max-width:720px;margin:20px auto 60px}
+.report h2{font-size:2.2rem;margin:0 0 6px}
+.report .stats{grid-template-columns:repeat(4,1fr)}
+
+@media(max-width:900px){
+  .hero{grid-template-columns:1fr;gap:32px;padding-top:16px}
+  .app{grid-template-columns:1fr}
+  aside{position:static}
+  .dots span{width:16px}
+}
+@media(max-width:520px){
+  .card{padding:20px}
+  .steps{grid-template-columns:1fr}
+  .join{flex-direction:column}
+  .report .stats{grid-template-columns:repeat(2,1fr)}
+  .who{display:none}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <div class="logo"><i></i>Re:Learn</div>
+    <div class="dots hidden" id="dots"></div>
+    <div class="who hidden" id="who"></div>
+  </div>
+
+  <!-- Welcome -->
+  <section id="welcome" class="hero">
+    <div>
+      <p class="kicker">Mechanics practice</p>
+      <h1>Every wrong answer has a <em>reason</em>. Let's find yours.</h1>
+      <p class="lead">Most apps just mark you wrong and show the answer. Re:Learn reads how you think, names the idea that tripped you up, fixes it, and then checks that it actually stuck.</p>
+      <div class="join">
+        <input id="name" type="text" placeholder="Your name" autocomplete="name" aria-label="Your name">
+        <button id="begin" class="accent">Start practising</button>
+      </div>
+      <p class="err" id="startErr"></p>
+      <div class="steps">
+        <div><b><span>1</span>Explain</b>Answer and say why, in one line.</div>
+        <div><b><span>2</span>Diagnose</b>See the exact idea behind the mistake.</div>
+        <div><b><span>3</span>Prove it</b>Fix it, then pass a new situation.</div>
+      </div>
+    </div>
+
+    <div class="demo" aria-label="Example: two students, same answer, different misconceptions">
+      <p class="kicker">Same wrong answer, different reasons</p>
+      <p class="q">A ball is thrown straight up. What is its acceleration at the very top?</p>
+      <div class="student">
+        <div class="avatar" style="background:#7C5CE0">A</div>
+        <div><p class="ans">Picked: Zero</p><p>"It stops at the top, so the velocity is zero."</p>
+          <span class="chip red">Velocity–acceleration confusion</span></div>
+      </div>
+      <div class="student">
+        <div class="avatar" style="background:#E08A2C">R</div>
+        <div><p class="ans">Picked: Zero</p><p>"The force of the throw has run out by then."</p>
+          <span class="chip blue">Impetus: motion carries a force</span></div>
+      </div>
+      <div class="student">
+        <div class="avatar" style="background:#2C9E6B">S</div>
+        <div><p class="ans">Picked: 9.8 m/s² down ✓</p><p>"Because the ball is still slowing down at the top."</p>
+          <span class="chip amber">Right answer, shaky reasoning</span></div>
+      </div>
+      <p class="foot">A right/wrong checker treats A and R the same. They need completely different fixes.</p>
+    </div>
+  </section>
+
+  <!-- Practice -->
+  <section id="app" class="app hidden">
+    <main id="flow">
+      <div id="ask" class="card">
+        <span class="topic" id="topic"></span>
+        <h2 id="qtext"></h2>
+        <div class="opts" id="qopts" role="radiogroup" aria-labelledby="qtext"></div>
+        <div class="field">
+          <span class="lbl" id="sureLbl">How sure are you?</span>
+          <div class="sure" role="radiogroup" aria-labelledby="sureLbl">
+            <label><input type="radio" name="sure" value="guess">Guessing</label>
+            <label><input type="radio" name="sure" value="fair">Fairly sure</label>
+            <label><input type="radio" name="sure" value="certain">Certain</label>
+          </div>
+        </div>
+        <div class="field">
+          <label for="qexp">Why did you pick that?</label>
+          <textarea id="qexp" placeholder="One or two sentences. This is what lets Re:Learn see how you're thinking."></textarea>
+          <div class="starters" data-for="qexp">
+            <button type="button">Because…</button><button type="button">I think the force…</button><button type="button">The speed…</button>
+          </div>
+        </div>
+        <p class="err" id="askErr"></p>
+        <div class="actions">
+          <button id="submitAns">Check my thinking</button>
+          <span class="hint"><kbd>A</kbd>–<kbd>D</kbd> to choose · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to submit</span>
+        </div>
+      </div>
+
+      <div id="diag" class="card hidden"></div>
+
+      <div id="fix" class="card fix hidden">
+        <p class="kicker">Fix it</p>
+        <p id="fixText"></p>
+        <div class="sim"><canvas id="sim" aria-describedby="simCap"></canvas><button class="replay" id="replay" type="button">↻ Replay</button></div>
+        <p class="caption" id="simCap"></p>
+        <div class="example" id="fixEx"></div>
+        <div class="actions"><button id="toRecheck" class="accent">Got it, test me on something new →</button></div>
+      </div>
+
+      <div id="recheck" class="card hidden">
+        <span class="topic">Same idea, new situation</span>
+        <h2 id="rtext"></h2>
+        <div class="opts" id="ropts" role="radiogroup" aria-labelledby="rtext"></div>
+        <div class="field">
+          <label for="rexp">Explain your reasoning</label>
+          <textarea id="rexp" placeholder="This is the real test: does your explanation still hold up?"></textarea>
+        </div>
+        <p class="err" id="reErr"></p>
+        <div class="actions"><button id="submitRe">Submit</button></div>
+        <div id="reResult"></div>
+      </div>
+
+      <div id="nextWrap" class="hidden" style="text-align:right"><button id="next">Next question →</button></div>
+    </main>
+
+    <aside>
+      <div class="card">
+        <h3>Your thinking map</h3>
+        <small>Ideas Re:Learn has spotted in your answers</small>
+        <div class="stats">
+          <div><b id="sAns">0</b><span>answered</span></div>
+          <div><b id="sFound" style="color:var(--accent)">0</b><span>ideas found</span></div>
+          <div><b id="sFixed" style="color:var(--ok)">0</b><span>fixed</span></div>
+        </div>
+        <div id="ideas"><p class="empty">Nothing yet. Answer a question to start mapping.</p></div>
+      </div>
+    </aside>
+  </section>
+
+  <!-- Report -->
+  <section id="report" class="report hidden">
+    <div class="card">
+      <p class="kicker">Session complete</p>
+      <h2 id="repTitle"></h2>
+      <p class="muted" id="repSub"></p>
+      <div class="stats">
+        <div><b id="rCorrect">0</b><span>right first time</span></div>
+        <div><b id="rFound" style="color:var(--accent)">0</b><span>ideas found</span></div>
+        <div><b id="rFixed" style="color:var(--ok)">0</b><span>fixed</span></div>
+        <div><b id="rOpen" style="color:var(--warn)">0</b><span>still open</span></div>
+      </div>
+      <div id="repIdeas" style="margin-top:16px"></div>
+      <div class="actions"><button id="again" class="accent">Practise again</button></div>
+    </div>
+  </section>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const show = (id, on = true) => $(id).classList.toggle("hidden", !on);
+const store = {get: k => { try { return localStorage.getItem(k); } catch { return null; } },
+               set: (k, v) => { try { localStorage.setItem(k, v); } catch {} }};
+
+let learner, questions = [], qi = 0, target = null, recheckId = null, results = [], phase = "ask";
+
+async function api(path, body) {
+  const r = await fetch(path, body ? {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)} : {});
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+function renderOpts(el, q, name) {
+  $(el).innerHTML = Object.entries(q.options).map(([k, v]) =>
+    `<label class="opt"><input type="radio" name="${name}" value="${esc(k)}"><span class="key">${esc(k)}</span><span>${esc(v)}</span></label>`).join("");
+}
+const picked = name => document.querySelector(`input[name=${name}]:checked`)?.value;
+const lock = (sel, on) => document.querySelectorAll(sel).forEach(e => e.disabled = on);
+
+/* ---------- start ---------- */
+const saved = store.get("relearn-name");
+if (saved) $("name").value = saved;
+$("name").addEventListener("keydown", e => e.key === "Enter" && $("begin").click());
+
+$("begin").onclick = async () => {
+  learner = $("name").value.trim();
+  if (!learner) { $("startErr").textContent = "Add your name so your thinking map can be saved."; return $("name").focus(); }
+  store.set("relearn-name", learner);
+  try { questions = await api("/api/questions"); }
+  catch { $("startErr").textContent = "Couldn't reach the server. Is app.py running?"; return; }
+  qi = 0; results = [];
+  show("welcome", false); show("report", false); show("app"); show("dots"); show("who");
+  $("who").textContent = `Hi, ${learner}`;
+  showQuestion(); loadProfile();
+};
+
+document.querySelectorAll(".starters button").forEach(b => b.onclick = () => {
+  const t = $(b.parentElement.dataset.for);
+  if (t.disabled) return;
+  t.value = (t.value ? t.value.trimEnd() + " " : "") + b.textContent.replace("…", " ");
+  t.focus(); t.setSelectionRange(t.value.length, t.value.length);
+});
+
+function renderDots() {
+  $("dots").innerHTML = questions.map((q, i) => {
+    const r = results[i];
+    const cls = i === qi && !r ? "now" : !r ? "" : r.resolved ? "fixed" : r.status === "correct" ? "ok" : "mis";
+    return `<span class="${cls}" title="Question ${i + 1}"></span>`;
+  }).join("");
+}
+
+/* ---------- question ---------- */
+function showQuestion() {
+  const q = questions[qi];
+  phase = "ask"; target = null; stopSim();
+  ["diag", "fix", "recheck", "nextWrap"].forEach(id => show(id, false));
+  $("ask").classList.remove("hidden");
+  $("ask").style.animation = "none"; $("ask").offsetHeight; $("ask").style.animation = "";
+  $("toRecheck").parentElement.classList.remove("hidden");
+  $("qexp").value = ""; $("rexp").value = ""; $("reResult").innerHTML = ""; $("askErr").textContent = "";
+  document.querySelectorAll("input[name=sure]").forEach(i => i.checked = false);
+  $("topic").textContent = `${q.topic} · ${qi + 1} of ${questions.length}`;
+  $("qtext").textContent = q.text;
+  renderOpts("qopts", q, "q");
+  lock("#ask input, #ask textarea, #ask button", false);
+  $("submitAns").textContent = "Check my thinking";
+  renderDots();
+  window.scrollTo({top: 0});
+}
+
+$("submitAns").onclick = async () => {
+  const q = questions[qi], choice = picked("q");
+  if (!choice) return $("askErr").textContent = "Pick an option first.";
+  $("askErr").textContent = "";
+  $("submitAns").disabled = true;
+  let d;
+  try { d = await api("/api/diagnose", {learner, qid: q.id, choice, explanation: $("qexp").value}); }
+  catch { $("askErr").textContent = "Something went wrong. Try again."; $("submitAns").disabled = false; return; }
+  renderDiagnosis(d, picked("sure"));
+  loadProfile();
+};
+
+/* ---------- diagnosis ---------- */
+function verdict(cls, icon, title, sub) {
+  return `<div class="verdict ${cls}"><div class="ic" aria-hidden="true">${icon}</div><div><h3>${title}</h3><p>${sub}</p></div></div>`;
+}
+
+function sureNote(d, sure) {
+  if (!sure) return "";
+  if (!d.correct && sure === "certain")
+    return `<div class="insight">You were <b>certain</b>. That usually means a solid-feeling idea that's quietly wrong, not a slip. Those are the most worth fixing.</div>`;
+  if (d.status === "correct" && sure === "guess")
+    return `<div class="insight">You said you were guessing, but your reasoning was spot on. Trust it more next time.</div>`;
+  if (d.status === "flawed_reasoning" && sure === "certain")
+    return `<div class="insight">You were certain and got it right, but for a reason that will break on a different question.</div>`;
+  return "";
+}
+
+function renderDiagnosis(d, sure) {
+  const el = $("diag");
+  show("diag");
+  if (d.status === "unknown") {
+    el.innerHTML = verdict("v-warn", "?", "Not quite. How did you get there?",
+      "Your explanation doesn't say enough to spot the idea behind it. Add a sentence above and check again.");
+    $("submitAns").disabled = false; $("submitAns").textContent = "Check again";
+    $("qexp").focus();
+    return;
+  }
+  phase = "diag";
+  lock("#ask input, #ask textarea, #ask button", true);
+  results[qi] = {status: d.status, label: d.label, name: d.misconception?.name, resolved: false};
+  renderDots();
+
+  if (d.status === "correct") {
+    el.innerHTML = verdict("v-ok", "✓", "Spot on.", "Right answer, and your reasoning holds up.") + sureNote(d, sure);
+    showNext();
+    el.scrollIntoView({block: "start"});
+    return;
+  }
+  const head = d.status === "flawed_reasoning"
+    ? verdict("v-warn", "!", "Right answer, wrong reason.", "Your explanation shows an idea that will trip you up on a different question.")
+    : verdict("v-bad", "✕", "Not quite, but there's a reason.", "Here's the idea behind your answer.");
+  el.innerHTML = head + `
+    <div class="mis">
+      <p class="kicker">The idea behind your answer</p>
+      <h3>${esc(d.misconception.name)}</h3>
+      <p>${esc(d.misconception.desc)}</p>
+      <div class="meter"><span>Model confidence</span><div class="track"><div class="fill"></div></div><b>${Math.round(d.confidence * 100)}%</b></div>
+    </div>` + sureNote(d, sure);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.querySelector(".fill").style.width = `${d.confidence * 100}%`));
+
+  target = d.label; recheckId = d.recheck.id;
+  $("fixText").textContent = d.intervention.explain;
+  $("fixEx").textContent = d.intervention.example;
+  $("rtext").textContent = d.recheck.text;
+  renderOpts("ropts", d.recheck, "r");
+  lock("#recheck input, #recheck textarea, #recheck button", false);
+  show("fix"); show("recheck", false);
+  startSim(d.label);
+  el.scrollIntoView({block: "start"});
+}
+
+$("toRecheck").onclick = () => {
+  show("recheck"); phase = "recheck";
+  $("toRecheck").parentElement.classList.add("hidden");
+  $("recheck").scrollIntoView({block: "start"});
+};
+
+$("submitRe").onclick = async () => {
+  const choice = picked("r");
+  if (!choice) return $("reErr").textContent = "Pick an option first.";
+  $("reErr").textContent = "";
+  $("submitRe").disabled = true;
+  let r;
+  try { r = await api("/api/reassess", {learner, qid: recheckId, choice, explanation: $("rexp").value, target}); }
+  catch { $("reErr").textContent = "Something went wrong. Try again."; $("submitRe").disabled = false; return; }
+  lock("#recheck input, #recheck textarea", true);
+  results[qi].resolved = r.resolved;
+  $("reResult").innerHTML = r.resolved
+    ? `<div class="result v-ok pop"><p class="big" style="color:var(--ok)">Fixed ✓</p>
+       <p>Right answer <b>and</b> your reasoning holds up in a brand new situation. That's how you know it stuck.</p></div>`
+    : `<div class="result v-warn pop"><p class="big" style="color:var(--warn)">Not yet</p>
+       <p>${r.correct ? "Right answer, but your explanation still leans on the same idea." : "This one tripped on the same idea."}
+       It stays on your thinking map, so it'll come back until it's gone.</p></div>`;
+  renderDots(); loadProfile(); showNext();
+};
+
+function showNext() {
+  phase = "next";
+  $("next").textContent = qi + 1 < questions.length ? "Next question →" : "See my report →";
+  show("nextWrap");
+}
+
+$("next").onclick = () => {
+  if (qi + 1 < questions.length) { qi++; showQuestion(); }
+  else showReport();
+};
+
+/* ---------- keyboard ---------- */
+document.addEventListener("keydown", e => {
+  if ($("app").classList.contains("hidden")) return;
+  const typing = e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT" && e.target.type === "text";
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    if (phase === "ask") $("submitAns").click();
+    else if (phase === "recheck") $("submitRe").click();
+    else if (phase === "next") $("next").click();
+    return;
+  }
+  if (typing || e.ctrlKey || e.metaKey || e.altKey) return;
+  const name = phase === "ask" ? "q" : phase === "recheck" ? "r" : null;
+  const inp = name && document.querySelector(`input[name=${name}][value="${e.key.toUpperCase()}"]:not(:disabled)`);
+  if (inp) { inp.checked = true; inp.focus(); }
+});
+
+/* ---------- thinking map ---------- */
+const STATUS = {active: ["red", "needs work"], recurring: ["amber", "keeps coming back"], resolved: ["green", "fixed"]};
+
+async function loadProfile() {
+  let p;
+  try { p = await api(`/api/profile/${encodeURIComponent(learner)}`); } catch { return; }
+  $("sAns").textContent = p.answered;
+  $("sFound").textContent = p.misconceptions.length;
+  $("sFixed").textContent = p.misconceptions.filter(m => m.status === "resolved").length;
+  $("ideas").innerHTML = p.misconceptions.length
+    ? p.misconceptions.map(m => {
+        const [c, t] = STATUS[m.status] || ["red", m.status];
+        return `<div class="idea"><div class="row"><span class="name">${esc(m.name)}</span><span class="chip ${c}">${t}</span></div>
+          <small>Spotted ${m.detected}× · fixed ${m.resolved}×</small></div>`;
+      }).join("")
+    : `<p class="empty">No misconceptions spotted yet. Nice.</p>`;
+}
+
+/* ---------- report ---------- */
+function showReport() {
+  stopSim();
+  show("app", false); show("report");
+  const done = results.filter(Boolean);
+  const correct = done.filter(r => r.status === "correct").length;
+  const found = done.filter(r => r.label);
+  const fixed = found.filter(r => r.resolved).length;
+  $("rCorrect").textContent = correct;
+  $("rFound").textContent = found.length;
+  $("rFixed").textContent = fixed;
+  $("rOpen").textContent = found.length - fixed;
+  $("repTitle").textContent = !found.length ? "Clean sweep." : fixed === found.length ? "Every idea fixed." : "Good session. A few ideas to revisit.";
+  $("repSub").textContent = !found.length
+    ? "No misconceptions spotted in your reasoning this time."
+    : `Re:Learn spotted ${found.length} misconception${found.length > 1 ? "s" : ""} and you fixed ${fixed}. Open ones will come back next session.`;
+  $("repIdeas").innerHTML = found.map(r =>
+    `<div class="idea"><div class="row"><span class="name">${esc(r.name)}</span>
+     <span class="chip ${r.resolved ? "green" : "amber"}">${r.resolved ? "fixed" : "still open"}</span></div></div>`).join("");
+  renderDots();
+  window.scrollTo({top: 0});
+}
+
+$("again").onclick = () => { show("report", false); show("app"); qi = 0; results = []; showQuestion(); loadProfile(); };
+
+/* ---------- mini physics sims ---------- */
+let raf = 0, simLabel = null, simStart = 0;
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function palette() {
+  const s = getComputedStyle(document.documentElement), v = n => s.getPropertyValue(n).trim();
+  return {ink: v("--ink"), muted: v("--muted"), line: v("--line"), accent: v("--accent"), blue: v("--blue"), ok: v("--ok"), surface: v("--surface")};
+}
+function arrow(c, x1, y1, x2, y2, col, label) {
+  const len = Math.hypot(x2 - x1, y2 - y1);
+  if (len < 3) return;
+  const a = Math.atan2(y2 - y1, x2 - x1);
+  c.strokeStyle = c.fillStyle = col; c.lineWidth = 3;
+  c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2 - 8 * Math.cos(a), y2 - 8 * Math.sin(a)); c.stroke();
+  c.beginPath(); c.moveTo(x2, y2);
+  c.lineTo(x2 - 12 * Math.cos(a - .45), y2 - 12 * Math.sin(a - .45));
+  c.lineTo(x2 - 12 * Math.cos(a + .45), y2 - 12 * Math.sin(a + .45)); c.fill();
+  if (label) { c.font = "600 13px 'Public Sans',sans-serif"; c.fillText(label, x2 + 8 * Math.cos(a) + (Math.abs(Math.sin(a)) > .5 ? 6 : -4), y2 + 8 * Math.sin(a) + 4); }
+}
+function text(c, s, x, y, col, size = 13, w = 500, align = "left") {
+  c.fillStyle = col; c.font = `${w} ${size}px 'Public Sans',sans-serif`; c.textAlign = align; c.fillText(s, x, y); c.textAlign = "left";
+}
+function ground(c, w, y, k) { c.strokeStyle = k.line; c.lineWidth = 2; c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); }
+function circle(c, x, y, r, col) { c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill(); }
+function box(c, x, y, w, h, col) { c.fillStyle = col; c.beginPath(); c.roundRect(x, y, w, h, 6); c.fill(); }
+
+const SIMS = {
+  VA_CONFUSION: {dur: 3200, cap: "Blue = velocity, red = acceleration. Velocity shrinks to zero at the top and flips direction. Acceleration never changes.",
+    draw(c, w, h, p, k) {
+      const g = h - 26, x = w * .4, y = g - 14 - (g - 60) * 4 * p * (1 - p), v = 1 - 2 * p;
+      ground(c, w, g, k); circle(c, x, y, 14, k.ink);
+      arrow(c, x - 40, y, x - 40, y - v * 60, k.blue, "v");
+      arrow(c, x + 40, y, x + 40, y + 42, k.accent, "a");
+      const rx = Math.min(w - 170, w * .62);
+      text(c, `v = ${Math.abs(v * 19.6).toFixed(1)} m/s ${Math.abs(v) < .03 ? "" : v > 0 ? "↑" : "↓"}`, rx, 50, k.blue, 15, 600);
+      text(c, "a = 9.8 m/s² ↓", rx, 76, k.accent, 15, 600);
+      if (Math.abs(v) < .06) text(c, "Top: v = 0, but a ≠ 0", rx, 104, k.ink, 14, 700);
+    }},
+  IMPETUS: {dur: 3600, cap: "Nothing pushes either puck after launch. The top one never slows down. The bottom one slows only because friction, a real force, acts on it.",
+    draw(c, w, h, p, k) {
+      const l1 = h * .38, l2 = h * .82;
+      ground(c, w, l1, k); ground(c, w, l2, k);
+      text(c, "Ice: no friction", 12, 22, k.muted, 12, 600); text(c, "Rough floor: friction", 12, l1 + 26, k.muted, 12, 600);
+      const x1 = -40 + p * (w + 80); box(c, x1, l1 - 18, 40, 18, k.ink);
+      text(c, "no force arrows: nothing pushing", Math.min(Math.max(x1 - 60, 140), w - 220), l1 - 28, k.blue, 12, 600);
+      const s = 1 - (1 - Math.min(p / .8, 1)) ** 2, x2 = 20 + s * w * .55;
+      box(c, x2, l2 - 18, 40, 18, k.ink);
+      if (s < .999) arrow(c, x2 - 2, l2 - 9, x2 - 40, l2 - 9, k.accent, "friction");
+      else text(c, "stopped by friction", x2 + 50, l2 - 6, k.accent, 12, 600);
+    }},
+  FORCE_VELOCITY: {dur: 3200, cap: "A constant force gives a constant acceleration, so the speed climbs in a straight line. It never levels off while the force acts.",
+    draw(c, w, h, p, k) {
+      const g = h - 40, track = w * .55, x = 16 + (track - 110) * p * p;
+      ground(c, track, g, k); box(c, x, g - 28, 60, 26, k.ink);
+      circle(c, x + 14, g - 2, 5, k.muted); circle(c, x + 46, g - 2, 5, k.muted);
+      arrow(c, x + 62, g - 15, x + 108, g - 15, k.accent, "F");
+      const gx = track + 30, gw = w - gx - 16, gy = 24, gh = g - gy;
+      c.strokeStyle = k.line; c.lineWidth = 2; c.beginPath(); c.moveTo(gx, gy); c.lineTo(gx, g); c.lineTo(gx + gw, g); c.stroke();
+      text(c, "speed", gx + 6, gy + 4, k.muted, 12); text(c, "time", gx + gw - 30, g + 18, k.muted, 12);
+      c.strokeStyle = k.blue; c.lineWidth = 3; c.beginPath(); c.moveTo(gx, g); c.lineTo(gx + gw * p, g - gh * p * .92); c.stroke();
+      circle(c, gx + gw * p, g - gh * p * .92, 4, k.blue);
+    }},
+  THIRD_LAW: {dur: 3800, cap: "During contact the two pushes are exactly equal (red arrows). The car flies off faster only because it has less mass: a = F ÷ m.",
+    draw(c, w, h, p, k) {
+      const g = h - 30, cx = w * .5;
+      ground(c, w, g, k);
+      let tr = cx, car = cx;
+      if (p < .45) tr = cx - (1 - p / .45) * (cx - 110);
+      else if (p > .62) { const q = (p - .62) / .38; car = cx + q * w * .36; tr = cx + q * w * .06; }
+      box(c, tr - 100, g - 50, 100, 48, k.muted); text(c, "Truck", tr - 70, g - 20, k.surface, 13, 700);
+      box(c, car, g - 28, 56, 26, k.blue); text(c, "Car", car + 15, g - 10, "#fff", 12, 700);
+      if (p >= .45 && p <= .62) {
+        arrow(c, cx + 4, g - 66, cx + 64, g - 66, k.accent, "F on car");
+        arrow(c, cx - 4, g - 66, cx - 64, g - 66, k.accent, "");
+        text(c, "F on truck", cx - 140, g - 76, k.accent, 13, 600);
+        text(c, "Same size", cx, 26, k.ink, 15, 700, "center");
+      }
+    }},
+  HEAVIER_FASTER: {dur: 2600, cap: "The 10 kg ball is pulled 10× harder, but it's also 10× harder to speed up. Weight ÷ mass is the same, so they land together.",
+    draw(c, w, h, p, k) {
+      const g = h - 20, top = 40, q = Math.min(p / .8, 1), fall = (g - top - 40) * q * q;
+      ground(c, w, g, k);
+      [[w * .33, 9, "1 kg", 18, "9.8 N"], [w * .58, 18, "10 kg", 54, "98 N"]].forEach(([x, r, m, al, wl]) => {
+        const y = top + 18 + fall;
+        circle(c, x, y, r, k.ink);
+        text(c, m, x, top - 14, k.muted, 12, 600, "center");
+        if (q < 1) arrow(c, x + r + 10, y, x + r + 10, y + al, k.accent, wl);
+      });
+      text(c, "a = 9.8 m/s² for both", w * .78, 50, k.blue, 14, 700, "center");
+    }},
+};
+
+function startSim(label) {
+  stopSim();
+  simLabel = SIMS[label] ? label : null;
+  $("simCap").textContent = simLabel ? SIMS[label].cap : "";
+  $("sim").parentElement.classList.toggle("hidden", !simLabel);
+  if (!simLabel) return;
+  $("replay").classList.toggle("hidden", reduced);
+  simStart = performance.now();
+  raf = requestAnimationFrame(tick);
+}
+function stopSim() { cancelAnimationFrame(raf); raf = 0; }
+function tick(now) {
+  const cv = $("sim"), dpr = devicePixelRatio || 1, w = cv.clientWidth, h = cv.clientHeight;
+  if (cv.width !== w * dpr) { cv.width = w * dpr; cv.height = h * dpr; }
+  const c = cv.getContext("2d"), sim = SIMS[simLabel];
+  c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, w, h);
+  // play once, hold the last frame for a beat, then loop
+  const t = (now - simStart) % (sim.dur + 900);
+  sim.draw(c, w, h, reduced ? .5 : Math.min(t / sim.dur, 1), palette());
+  if (!reduced) raf = requestAnimationFrame(tick);
+}
+$("replay").onclick = () => { simStart = performance.now(); };
+addEventListener("resize", () => { if (simLabel && reduced) tick(performance.now()); });
+</script>
+</body>
+</html>

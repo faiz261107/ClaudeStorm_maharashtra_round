@@ -1,0 +1,388 @@
+"""
+Re:Learn API (FastAPI).
+
+    GET  /                          single-page app
+    GET  /api/health                model backend + config
+    GET  /api/questions             question list WITHOUT answer keys
+    GET  /api/misconceptions        taxonomy (names, beliefs, physics)
+    POST /api/session/start         {learner, mode} -> session + question order + profile
+    POST /api/diagnose              {learner, question_id, choice, explanation, confidence}
+                                    -> status, misconception, intervention, transfer probe
+    POST /api/reassess              {learner, misconception, probe_id, choice, explanation, confidence, phase}
+                                    -> resolved true/false (null = inconclusive), next probe
+    GET  /api/recheck/{learner}     delayed recheck probe if one is due (FR-7)
+    GET  /api/profile/{learner}     learner model (FR-8)
+    GET  /api/report/{learner}      session report (FR-13)
+    POST /api/session/finish        {session_id}
+    POST /api/feedback              "that's not what I meant" (PRD §15) -> stored as training data
+    GET  /api/class                 teacher class view (FR-14)
+    GET  /api/metrics               evaluation results from ml/reports/metrics.json (FR-11)
+    DELETE /api/learner/{learner}   reset a learner (demo convenience)
+
+Run:  python run.py     (or)   uvicorn backend.app:app --reload
+"""
+
+from __future__ import annotations
+
+import json
+import random
+import sys
+from pathlib import Path
+from typing import Literal, Optional
+
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from backend.data import (  # noqa: E402
+    INTERVENTIONS, ITEM_INDEX, MISCONCEPTIONS, NONE_LABEL, PROBES, QUESTIONS, SENTENCE_STARTERS,
+    public_item,
+)
+from backend.diagnosis import get_diagnoser  # noqa: E402
+from backend.learner_model import MAX_PROBES, PROBES_REQUIRED, RECHECK_GAP, get_store  # noqa: E402
+
+FRONTEND = ROOT / "frontend"
+REPORTS = ROOT / "ml" / "reports"
+
+app = FastAPI(title="Re:Learn API", version="1.0.0",
+              description="Adaptive multimodal learning environment – misconception diagnosis for intro mechanics.")
+app.mount("/static", StaticFiles(directory=str(FRONTEND)), name="static")
+
+# A curated 8-question demo set that exercises every misconception and both confusable pairs.
+QUICK_SET = ["Q01", "Q21", "Q27", "Q14", "Q07", "Q15", "Q23", "Q05"]
+TOPICS = {q["topic"] for q in QUESTIONS}
+
+
+# ---------------------------------------------------------------------------
+# Schemas
+# ---------------------------------------------------------------------------
+
+class StartSession(BaseModel):
+    learner: str = Field(min_length=1, max_length=60)
+    mode: Literal["quick", "full", "topic"] = "quick"
+    topic: Optional[str] = None
+
+
+class DiagnoseIn(BaseModel):
+    learner: str = Field(min_length=1, max_length=60)
+    question_id: str
+    choice: str
+    explanation: str = ""
+    confidence: Literal["guessing", "fairly_sure", "certain"] = "fairly_sure"
+    session_id: Optional[int] = None
+
+
+class ReassessIn(BaseModel):
+    learner: str = Field(min_length=1, max_length=60)
+    misconception: str
+    probe_id: str
+    choice: str
+    explanation: str = ""
+    confidence: Literal["guessing", "fairly_sure", "certain"] = "fairly_sure"
+    phase: Literal["probe", "recheck"] = "probe"
+    session_id: Optional[int] = None
+
+
+class FinishSession(BaseModel):
+    session_id: int
+
+
+class FeedbackIn(BaseModel):
+    learner: str
+    attempt_id: int
+    suggested_label: str
+    note: str = ""
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def misconception_card(m: str, confidence: float) -> dict:
+    meta = MISCONCEPTIONS[m]
+    return {"id": m, "name": meta["name"], "short": meta["short"], "believes": meta["believes"],
+            "physics": meta["physics"], "colour": meta["colour"], "confidence": round(confidence, 3)}
+
+
+def pick_probe(learner: str, m: str, exclude: list[str] | None = None) -> dict | None:
+    store = get_store()
+    used = store.probes_used(learner, m)
+    pool = [p for p in PROBES[m] if p["id"] not in used and p["id"] not in (exclude or [])]
+    if not pool:
+        pool = [p for p in PROBES[m] if p["id"] not in (exclude or [])] or PROBES[m]
+    return pool[0]
+
+
+def next_probe_payload(learner: str, m: str, phase: str = "probe") -> dict | None:
+    p = pick_probe(learner, m)
+    if p is None:
+        return None
+    get_store().mark_probe_used(learner, m, p["id"])
+    return {**public_item(p), "target": m, "phase": phase,
+            "probes_required": PROBES_REQUIRED}
+
+
+def wants_more_detail(status: str) -> bool:
+    return status == "unknown"
+
+
+# ---------------------------------------------------------------------------
+# Routes
+# ---------------------------------------------------------------------------
+
+@app.get("/", include_in_schema=False)
+def index():
+    return FileResponse(FRONTEND / "index.html")
+
+
+@app.get("/api/health")
+def health():
+    d = get_diagnoser()
+    return {"ok": True, "model": d.info(), "probes_required": PROBES_REQUIRED, "recheck_gap": RECHECK_GAP,
+            "questions": len(QUESTIONS), "misconceptions": len(MISCONCEPTIONS)}
+
+
+@app.get("/api/questions")
+def questions():
+    return {"questions": [public_item(q) for q in QUESTIONS], "sentence_starters": SENTENCE_STARTERS}
+
+
+@app.get("/api/misconceptions")
+def misconceptions():
+    return {m: {"id": m, "name": v["name"], "short": v["short"], "believes": v["believes"],
+                "physics": v["physics"], "colour": v["colour"], "confusable_with": v["confusable_with"]}
+            for m, v in MISCONCEPTIONS.items()}
+
+
+@app.post("/api/session/start")
+def start_session(body: StartSession):
+    learner = body.learner.strip()
+    if body.mode == "quick":
+        order = list(QUICK_SET)
+    elif body.mode == "topic":
+        if body.topic not in TOPICS:
+            raise HTTPException(400, f"unknown topic; choose one of {sorted(TOPICS)}")
+        order = [q["id"] for q in QUESTIONS if q["topic"] == body.topic]
+    else:
+        order = [q["id"] for q in QUESTIONS]
+        random.Random(hash(learner) & 0xFFFF).shuffle(order)
+    sid = get_store().start_session(learner, order)
+    return {"session_id": sid, "learner": learner, "question_order": order,
+            "questions": [public_item(ITEM_INDEX[i]) for i in order],
+            "sentence_starters": SENTENCE_STARTERS,
+            "profile": get_store().profile(learner)}
+
+
+@app.post("/api/diagnose")
+def diagnose(body: DiagnoseIn):
+    item = ITEM_INDEX.get(body.question_id)
+    if item is None:
+        raise HTTPException(404, "unknown question")
+    diag = get_diagnoser()
+    store = get_store()
+    try:
+        d, latency = diag.diagnose(item, body.choice, body.explanation)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    correct = diag.is_correct(item, body.choice)
+    label = d.label if d.label in MISCONCEPTIONS else d.label
+
+    attempt_id = store.record_attempt(
+        learner=body.learner, session_id=body.session_id, phase="question", item_id=item["id"], choice=body.choice,
+        correct=int(correct), explanation=body.explanation, self_confidence=body.confidence, status=d.status,
+        label=label, model_confidence=d.confidence, target=None, resolved=None, latency_ms=latency)
+
+    out = {
+        "attempt_id": attempt_id, "status": d.status, "correct": correct, "label": label,
+        "confidence": round(d.confidence, 3), "source": d.source, "notes": d.notes, "latency_ms": round(latency, 1),
+        "probabilities": {k: round(v, 3) for k, v in sorted(d.probabilities.items(), key=lambda kv: -kv[1])},
+        "self_confidence": body.confidence,
+    }
+    if d.status in ("misconception", "flawed_reasoning"):
+        confidently_held = body.confidence == "certain"
+        state = store.on_detected(body.learner, label, confidently_held)
+        out.update({
+            "misconception": misconception_card(label, d.confidence),
+            "intervention": INTERVENTIONS[label],
+            "state": state,
+            "confidently_held": confidently_held,
+            "probe": next_probe_payload(body.learner, label),
+        })
+    elif d.status == "unknown":
+        out["ask"] = ("Your answer is right, but I can't tell what you were thinking. Could you add a sentence about *why*?"
+                      if correct else
+                      "I can't tell from this what led you to that answer. Add a sentence or two about why — "
+                      "what forces act, or what the velocity and acceleration are doing.")
+        out["sentence_starters"] = SENTENCE_STARTERS
+    else:
+        out["message"] = "Right answer, sound reasoning."
+    out["profile"] = store.profile(body.learner)
+    return out
+
+
+@app.post("/api/reassess")
+def reassess(body: ReassessIn):
+    probe = ITEM_INDEX.get(body.probe_id)
+    if probe is None or body.probe_id not in {p["id"] for p in PROBES.get(body.misconception, [])}:
+        raise HTTPException(404, "unknown probe for that misconception")
+    target = body.misconception
+    diag = get_diagnoser()
+    store = get_store()
+    try:
+        d, latency = diag.diagnose(probe, body.choice, body.explanation)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    correct = diag.is_correct(probe, body.choice)
+
+    # Resolution rule (FR-6): correct answer AND the targeted misconception absent from the reasoning.
+    target_present = d.label == target
+    inconclusive = d.status == "unknown" and correct    # right answer, too little reasoning to judge
+    if inconclusive:
+        resolved: bool | None = None
+    else:
+        resolved = bool(correct and not target_present)
+
+    attempt_id = store.record_attempt(
+        learner=body.learner, session_id=body.session_id, phase=body.phase, item_id=probe["id"], choice=body.choice,
+        correct=int(correct), explanation=body.explanation, self_confidence=body.confidence, status=d.status,
+        label=d.label, model_confidence=d.confidence, target=target,
+        resolved=None if resolved is None else int(resolved), latency_ms=latency)
+
+    out = {
+        "attempt_id": attempt_id, "resolved": resolved, "correct": correct, "status": d.status, "label": d.label,
+        "confidence": round(d.confidence, 3), "source": d.source, "notes": d.notes, "latency_ms": round(latency, 1),
+        "target": target, "phase": body.phase, "target_present": target_present,
+        "probabilities": {k: round(v, 3) for k, v in sorted(d.probabilities.items(), key=lambda kv: -kv[1])},
+    }
+
+    if resolved is None:
+        out["ask"] = "Right answer — but to count this as fixed I need to see your reasoning. One more sentence?"
+        out["sentence_starters"] = SENTENCE_STARTERS
+        out["state"] = store.get_state(body.learner, target)["state"]
+        out["profile"] = store.profile(body.learner)
+        return out
+
+    res = store.on_probe(body.learner, target, resolved, phase=body.phase)
+    out.update(res)
+    out["probes_required"] = PROBES_REQUIRED
+
+    # A different misconception surfaced in the probe reasoning -> track it too
+    if d.status in ("misconception", "flawed_reasoning") and d.label != target:
+        store.on_detected(body.learner, d.label, body.confidence == "certain")
+        out["new_misconception"] = misconception_card(d.label, d.confidence)
+        out["new_intervention"] = INTERVENTIONS[d.label]
+
+    if body.phase == "recheck":
+        out["message"] = ("Still fixed after a delay — that's real learning." if resolved
+                          else "It came back. Marked as recurring; let's revisit the idea.")
+        if not resolved:
+            out["intervention"] = INTERVENTIONS[target]
+            out["misconception"] = misconception_card(target, d.confidence)
+            out["probe"] = next_probe_payload(body.learner, target)
+    elif resolved and not res["resolved_now"]:
+        used = len(store.probes_used(body.learner, target))
+        if used >= MAX_PROBES:
+            store.schedule_recheck(body.learner, target)
+            out["message"] = ("Clear in this context. You've seen every transfer question for this idea, so I'll mark it "
+                              "improving and re-check it a little later in the session.")
+            out["probe"] = None
+        else:
+            out["message"] = f"Good — {res['probes_passed']} of {PROBES_REQUIRED} contexts clear. One more, in a new setting."
+            out["probe"] = next_probe_payload(body.learner, target)
+    elif resolved and res["resolved_now"]:
+        out["message"] = (f"Resolved: right answer and clean reasoning across {PROBES_REQUIRED} contexts. "
+                          f"I'll quietly re-check this later in the session.")
+    else:
+        used = len(store.probes_used(body.learner, target))
+        if correct and target_present:
+            out["message"] = "Right answer, but the same idea is still in your reasoning — so it isn't fixed yet."
+        else:
+            out["message"] = "Not yet. Let's look at the idea again from another angle."
+        out["intervention"] = INTERVENTIONS[target]
+        out["misconception"] = misconception_card(target, d.confidence)
+        out["probe"] = next_probe_payload(body.learner, target) if used < MAX_PROBES else None
+        if out["probe"] is None:
+            out["message"] += " We'll leave this open and come back to it in a later session."
+    out["profile"] = store.profile(body.learner)
+    return out
+
+
+@app.get("/api/recheck/{learner}")
+def recheck(learner: str):
+    cands = get_store().recheck_candidates(learner)
+    if not cands:
+        return {"probe": None}
+    m = cands[0]
+    return {"probe": next_probe_payload(learner, m, phase="recheck"), "misconception": misconception_card(m, 0.0)}
+
+
+@app.get("/api/profile/{learner}")
+def profile(learner: str):
+    return get_store().profile(learner)
+
+
+@app.get("/api/report/{learner}")
+def report(learner: str):
+    p = get_store().profile(learner)
+    ms = p["misconceptions"]
+    summary = {
+        "answered": p["answered"],
+        "right_first_time": p["right_first_time"],
+        "found": len(ms),
+        "fixed": sum(1 for m in ms if m["state"] == "resolved"),
+        "improving": sum(1 for m in ms if m["state"] == "improving"),
+        "still_open": sum(1 for m in ms if m["state"] in ("active",)),
+        "recurring": sum(1 for m in ms if m["state"] == "recurring"),
+        "flawed_reasoning": p["flawed_reasoning"],
+        "confidently_held": sum(1 for m in ms if m["confidently_held"]),
+        "explained_share": p["explained_share"],
+    }
+    details = [{**m, "name": MISCONCEPTIONS[m["id"]]["name"], "short": MISCONCEPTIONS[m["id"]]["short"],
+                "physics": MISCONCEPTIONS[m["id"]]["physics"], "colour": MISCONCEPTIONS[m["id"]]["colour"]} for m in ms]
+    return {"learner": learner, "summary": summary, "misconceptions": details, "timeline": p["timeline"]}
+
+
+@app.post("/api/session/finish")
+def finish_session(body: FinishSession):
+    get_store().finish_session(body.session_id)
+    return {"ok": True}
+
+
+@app.post("/api/feedback")
+def feedback(body: FeedbackIn):
+    if body.suggested_label not in MISCONCEPTIONS and body.suggested_label != NONE_LABEL:
+        raise HTTPException(400, "unknown label")
+    fid = get_store().add_feedback(body.learner, body.attempt_id, body.suggested_label, body.note)
+    return {"ok": True, "feedback_id": fid, "message": "Thanks — stored as a candidate training example."}
+
+
+@app.get("/api/feedback/export")
+def feedback_export():
+    return {"rows": get_store().export_feedback_rows()}
+
+
+@app.get("/api/class")
+def class_view():
+    data = get_store().class_view()
+    data["taxonomy"] = {m: {"name": v["name"], "colour": v["colour"]} for m, v in MISCONCEPTIONS.items()}
+    return data
+
+
+@app.get("/api/metrics")
+def metrics():
+    path = REPORTS / "metrics.json"
+    if not path.exists():
+        return JSONResponse({"available": False, "hint": "run: python ml/evaluate.py"}, status_code=200)
+    m = json.loads(path.read_text(encoding="utf-8"))
+    return {"available": True, **m}
+
+
+@app.delete("/api/learner/{learner}")
+def reset_learner(learner: str):
+    get_store().reset_learner(learner)
+    return {"ok": True}

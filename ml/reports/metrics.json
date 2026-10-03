@@ -1,0 +1,329 @@
+{
+  "targets": {
+    "macro_f1_heldout_questions": 0.8,
+    "confusable_pair_accuracy": 0.75,
+    "flawed_reasoning_recall": 0.7,
+    "unseen_misconception_top1": 0.6,
+    "ece": 0.1
+  },
+  "decision_config": {
+    "prior_boost": 2.5,
+    "none_boost": 1.3,
+    "item_boost": 1.6,
+    "abstain_threshold": 0.45,
+    "min_words": 3,
+    "unseen_sim_threshold": 0.1,
+    "unseen_margin": 0.02,
+    "unseen_max_classifier_conf": 0.97,
+    "unseen_in_map_sim_threshold": 0.08
+  },
+  "dataset": {
+    "rows": 1831,
+    "items": 45,
+    "hand_rows": 85,
+    "label_counts": {
+      "NONE": 520,
+      "FORCE_VELOCITY": 305,
+      "THIRD_LAW": 298,
+      "IMPETUS": 298,
+      "HEAVIER_FASTER": 207,
+      "VA_CONFUSION": 203
+    }
+  },
+  "split": {
+    "seed": 7,
+    "train_items": [
+      "P_FV_1",
+      "P_FV_2",
+      "P_HF_2",
+      "P_HF_3",
+      "P_IM_2",
+      "P_IM_3",
+      "P_TL_2",
+      "P_TL_3",
+      "P_VA_1",
+      "P_VA_2",
+      "Q01",
+      "Q04",
+      "Q05",
+      "Q06",
+      "Q07",
+      "Q08",
+      "Q09",
+      "Q11",
+      "Q13",
+      "Q15",
+      "Q16",
+      "Q17",
+      "Q18",
+      "Q19",
+      "Q22",
+      "Q23",
+      "Q24",
+      "Q26",
+      "Q27",
+      "Q28",
+      "Q30"
+    ],
+    "test_items": [
+      "P_FV_3",
+      "P_HF_1",
+      "P_IM_1",
+      "P_TL_1",
+      "P_VA_3",
+      "Q02",
+      "Q03",
+      "Q10",
+      "Q12",
+      "Q14",
+      "Q20",
+      "Q21",
+      "Q25",
+      "Q29"
+    ]
+  },
+  "heldout_all_items": {
+    "n": 535,
+    "accuracy": 0.9925233644859813,
+    "macro_f1": 0.9926304109255516
+  },
+  "heldout_questions_only": {
+    "n": 363,
+    "accuracy": 0.9889807162534435,
+    "macro_f1": 0.989391291904897
+  },
+  "heldout_probes_only": {
+    "n": 172,
+    "accuracy": 1.0,
+    "macro_f1": 1.0
+  },
+  "heldout_hand_rows": {
+    "n": 24,
+    "accuracy": 0.875,
+    "macro_f1": 0.8592592592592593
+  },
+  "abstain_rate_on_valid_rows": 0.0037243947858473,
+  "per_label": {
+    "VA_CONFUSION": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 69
+    },
+    "IMPETUS": {
+      "precision": 0.9879518072289156,
+      "recall": 0.9879518072289156,
+      "f1": 0.9879518072289156,
+      "support": 83
+    },
+    "FORCE_VELOCITY": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "support": 78
+    },
+    "THIRD_LAW": {
+      "precision": 0.9886363636363636,
+      "recall": 0.9775280898876404,
+      "f1": 0.9830508474576272,
+      "support": 89
+    },
+    "HEAVIER_FASTER": {
+      "precision": 0.9821428571428571,
+      "recall": 1.0,
+      "f1": 0.990990990990991,
+      "support": 55
+    },
+    "NONE": {
+      "precision": 0.9937888198757764,
+      "recall": 0.9937888198757764,
+      "f1": 0.9937888198757764,
+      "support": 161
+    }
+  },
+  "confusion_matrix": {
+    "labels": [
+      "VA_CONFUSION",
+      "IMPETUS",
+      "FORCE_VELOCITY",
+      "THIRD_LAW",
+      "HEAVIER_FASTER",
+      "NONE"
+    ],
+    "matrix": [
+      [
+        69,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        82,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        78,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        87,
+        1,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        55,
+        0
+      ],
+      [
+        0,
+        1,
+        0,
+        0,
+        0,
+        160
+      ]
+    ]
+  },
+  "confusable_pair_accuracy": 0.9655172413793104,
+  "confusable_pair_n": 58,
+  "flawed_reasoning_recall": 0.9838709677419355,
+  "flawed_reasoning_exact_label": 0.9838709677419355,
+  "flawed_reasoning_n": 62,
+  "flawed_reasoning_false_alarm_rate": 0.006211180124223602,
+  "ece": 0.06036969421054131,
+  "reliability": [
+    {
+      "bin": "0.0-0.1",
+      "n": 0,
+      "confidence": null,
+      "accuracy": null
+    },
+    {
+      "bin": "0.1-0.2",
+      "n": 0,
+      "confidence": null,
+      "accuracy": null
+    },
+    {
+      "bin": "0.2-0.3",
+      "n": 0,
+      "confidence": null,
+      "accuracy": null
+    },
+    {
+      "bin": "0.3-0.4",
+      "n": 0,
+      "confidence": null,
+      "accuracy": null
+    },
+    {
+      "bin": "0.4-0.5",
+      "n": 2,
+      "confidence": 0.4802258711115759,
+      "accuracy": 0.5
+    },
+    {
+      "bin": "0.5-0.6",
+      "n": 7,
+      "confidence": 0.558127444243124,
+      "accuracy": 0.8571428571428571
+    },
+    {
+      "bin": "0.6-0.7",
+      "n": 7,
+      "confidence": 0.6722141836856255,
+      "accuracy": 1.0
+    },
+    {
+      "bin": "0.7-0.8",
+      "n": 24,
+      "confidence": 0.7602653731353256,
+      "accuracy": 0.9583333333333334
+    },
+    {
+      "bin": "0.8-0.9",
+      "n": 73,
+      "confidence": 0.8563306007417961,
+      "accuracy": 0.9863013698630136
+    },
+    {
+      "bin": "0.9-1.0",
+      "n": 422,
+      "confidence": 0.9677034778441637,
+      "accuracy": 1.0
+    }
+  ],
+  "unseen_misconception": {
+    "VA_CONFUSION": {
+      "n": 69,
+      "top1": 0.7246376811594203,
+      "top1_when_answered": 0.8771929824561403,
+      "abstained": 0.17391304347826086,
+      "false_positive_rate": 0.014957264957264958
+    },
+    "IMPETUS": {
+      "n": 83,
+      "top1": 0.9518072289156626,
+      "top1_when_answered": 0.9634146341463414,
+      "abstained": 0.012048192771084338,
+      "false_positive_rate": 0.00881057268722467
+    },
+    "FORCE_VELOCITY": {
+      "n": 78,
+      "top1": 0.8076923076923077,
+      "top1_when_answered": 0.9402985074626866,
+      "abstained": 0.14102564102564102,
+      "false_positive_rate": 0.010893246187363835
+    },
+    "THIRD_LAW": {
+      "n": 90,
+      "top1": 0.9111111111111111,
+      "top1_when_answered": 0.9761904761904762,
+      "abstained": 0.06666666666666667,
+      "false_positive_rate": 0.013422818791946308
+    },
+    "HEAVIER_FASTER": {
+      "n": 56,
+      "top1": 0.875,
+      "top1_when_answered": 0.8909090909090909,
+      "abstained": 0.017857142857142856,
+      "false_positive_rate": 0.016632016632016633
+    }
+  },
+  "unseen_misconception_top1": 0.8540496657757004,
+  "unseen_misconception_fpr": 0.012943183851163281,
+  "hand_rows_template_only_model": {
+    "n": 75,
+    "accuracy": 0.9333333333333333,
+    "macro_f1": 0.9322727980080922,
+    "abstained": 0.11764705882352941
+  },
+  "vague_abstain_rate": 0.9407407407407408,
+  "vague_n": 135,
+  "latency_ms_per_diagnosis": 2.884318500000518,
+  "machine": "AMD64 / CPython 3.13.9",
+  "targets_met": {
+    "macro_f1_heldout_questions": true,
+    "confusable_pair_accuracy": true,
+    "flawed_reasoning_recall": true,
+    "unseen_misconception_top1": true,
+    "ece": true
+  }
+}

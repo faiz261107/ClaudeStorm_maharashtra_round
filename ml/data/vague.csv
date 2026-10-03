@@ -1,0 +1,136 @@
+row_id,item_id,item_kind,question,option_key,option_text,correct,explanation,label,source
+V0000,Q01,question,"A ball is thrown straight up. At the very top of its flight, what is its acceleration? (Ignore air resistance.)",A,Zero — it is momentarily at rest,0,that one,UNKNOWN,vague
+V0001,Q01,question,"A ball is thrown straight up. At the very top of its flight, what is its acceleration? (Ignore air resistance.)",C,9.8 m/s² upward,0,it just is,UNKNOWN,vague
+V0002,Q01,question,"A ball is thrown straight up. At the very top of its flight, what is its acceleration? (Ignore air resistance.)",D,It depends on how hard it was thrown,0,because physics,UNKNOWN,vague
+V0003,Q02,question,A pendulum bob swings to the end of its arc and is momentarily at rest. At that instant its acceleration is…,A,"Zero, because it has stopped",0,no idea,UNKNOWN,vague
+V0004,Q02,question,A pendulum bob swings to the end of its arc and is momentarily at rest. At that instant its acceleration is…,C,"Non-zero, directed outward away from the pivot",0,my teacher said,UNKNOWN,vague
+V0005,Q02,question,A pendulum bob swings to the end of its arc and is momentarily at rest. At that instant its acceleration is…,D,Equal to its velocity,0,logic,UNKNOWN,vague
+V0006,Q03,question,"A car brakes and comes to rest at a red light. At the exact instant its speed reaches zero, before it starts moving again, which statement is true?",A,Velocity is zero and acceleration is zero,0,seems logical,UNKNOWN,vague
+V0007,Q03,question,"A car brakes and comes to rest at a red light. At the exact instant its speed reaches zero, before it starts moving again, which statement is true?",C,Velocity is non-zero because the car is about to move,0,not sure,UNKNOWN,vague
+V0008,Q03,question,"A car brakes and comes to rest at a red light. At the exact instant its speed reaches zero, before it starts moving again, which statement is true?",D,Acceleration is zero because the engine is off,0,that one,UNKNOWN,vague
+V0009,Q04,question,"A toy cart rolls up a smooth ramp, stops for an instant, then rolls back down. At the turnaround point…",A,Both velocity and acceleration are zero,0,it makes sense,UNKNOWN,vague
+V0010,Q04,question,"A toy cart rolls up a smooth ramp, stops for an instant, then rolls back down. At the turnaround point…",C,Velocity is zero; acceleration points up the ramp until the push runs out,0,guessing,UNKNOWN,vague
+V0011,Q04,question,"A toy cart rolls up a smooth ramp, stops for an instant, then rolls back down. At the turnaround point…",D,Acceleration is zero but velocity is not,0,we learned this,UNKNOWN,vague
+V0012,Q05,question,"A rock is tossed upward. Compare its acceleration on the way up, at the top, and on the way down (no air).",A,Up: 9.8 m/s² down; top: zero; down: 9.8 m/s² down,0,it just is,UNKNOWN,vague
+V0013,Q05,question,"A rock is tossed upward. Compare its acceleration on the way up, at the top, and on the way down (no air).",C,Up: upward acceleration; top: zero; down: downward acceleration,0,not sure,UNKNOWN,vague
+V0014,Q05,question,"A rock is tossed upward. Compare its acceleration on the way up, at the top, and on the way down (no air).",D,Larger on the way down than on the way up,0,that one,UNKNOWN,vague
+V0015,Q06,question,A bungee jumper reaches the lowest point of the jump and is momentarily motionless. What is true about the jumper's acceleration there?,A,It is zero because the jumper is not moving,0,we learned this,UNKNOWN,vague
+V0016,Q06,question,A bungee jumper reaches the lowest point of the jump and is momentarily motionless. What is true about the jumper's acceleration there?,C,"It is downward, equal to g",0,guessing,UNKNOWN,vague
+V0017,Q06,question,A bungee jumper reaches the lowest point of the jump and is momentarily motionless. What is true about the jumper's acceleration there?,D,"It equals the velocity, which is zero",0,i think so,UNKNOWN,vague
+V0018,Q07,question,"A coin is flicked straight up and is now rising, no longer touching the hand. Ignoring air, what force(s) act on it?",B,Gravity downward plus a decreasing upward force from the flick,0,that one,UNKNOWN,vague
+V0019,Q07,question,"A coin is flicked straight up and is now rising, no longer touching the hand. Ignoring air, what force(s) act on it?",C,"An upward force larger than gravity, since it is going up",0,obviously,UNKNOWN,vague
+V0020,Q07,question,"A coin is flicked straight up and is now rising, no longer touching the hand. Ignoring air, what force(s) act on it?",D,No forces — it is in free flight,0,i think so,UNKNOWN,vague
+V0021,Q08,question,A hockey puck is struck and slides across frictionless ice. Why does it keep moving after the stick has lost contact?,A,"The force of the hit is still inside the puck, pushing it",0,guessing,UNKNOWN,vague
+V0022,Q08,question,A hockey puck is struck and slides across frictionless ice. Why does it keep moving after the stick has lost contact?,C,The ice pushes it forward,0,because physics,UNKNOWN,vague
+V0023,Q08,question,A hockey puck is struck and slides across frictionless ice. Why does it keep moving after the stick has lost contact?,D,Its weight pushes it along,0,not sure,UNKNOWN,vague
+V0024,Q09,question,"A ball rolls through a curved tube lying flat on a table and exits the open end. Seen from above, what path does it follow after leaving the tube?",B,"It keeps curving the same way for a while, then straightens",0,my teacher said,UNKNOWN,vague
+V0025,Q09,question,"A ball rolls through a curved tube lying flat on a table and exits the open end. Seen from above, what path does it follow after leaving the tube?",C,It curves the opposite way,0,it just is,UNKNOWN,vague
+V0026,Q09,question,"A ball rolls through a curved tube lying flat on a table and exits the open end. Seen from above, what path does it follow after leaving the tube?",D,It keeps curving in a full circle,0,idk,UNKNOWN,vague
+V0027,Q10,question,"A cannonball is at the highest point of its arc. Ignoring air, which forces act on it there?",B,Gravity downward and a forward force from the cannon,0,just a guess,UNKNOWN,vague
+V0028,Q10,question,"A cannonball is at the highest point of its arc. Ignoring air, which forces act on it there?",C,Gravity and an upward force that is just about to run out,0,i remember this,UNKNOWN,vague
+V0029,Q10,question,"A cannonball is at the highest point of its arc. Ignoring air, which forces act on it there?",D,"Zero net force, since it is at the top",0,i think so,UNKNOWN,vague
+V0030,Q11,question,"A spacecraft in deep space (no gravity, no drag) switches its engine off. What happens to its motion?",A,It gradually slows down and stops,0,seems logical,UNKNOWN,vague
+V0031,Q11,question,"A spacecraft in deep space (no gravity, no drag) switches its engine off. What happens to its motion?",C,It stops immediately,0,no idea,UNKNOWN,vague
+V0032,Q11,question,"A spacecraft in deep space (no gravity, no drag) switches its engine off. What happens to its motion?",D,It speeds up because nothing holds it back,0,because physics,UNKNOWN,vague
+V0033,Q12,question,Why does a ball thrown upward eventually come back down?,A,The throw's force runs out and then gravity takes over,0,my teacher said,UNKNOWN,vague
+V0034,Q12,question,Why does a ball thrown upward eventually come back down?,C,Air pushes it back down,0,it seemed right,UNKNOWN,vague
+V0035,Q12,question,Why does a ball thrown upward eventually come back down?,D,The upward force becomes smaller than gravity,0,i think so,UNKNOWN,vague
+V0036,Q13,question,"Two identical balls leave a table edge at the same instant: one is dropped, one is thrown horizontally. Ignoring air, which hits the floor first?",A,The dropped ball,0,i remember this,UNKNOWN,vague
+V0037,Q13,question,"Two identical balls leave a table edge at the same instant: one is dropped, one is thrown horizontally. Ignoring air, which hits the floor first?",C,The thrown ball,0,no idea,UNKNOWN,vague
+V0038,Q13,question,"Two identical balls leave a table edge at the same instant: one is dropped, one is thrown horizontally. Ignoring air, which hits the floor first?",D,It depends on their mass,0,because,UNKNOWN,vague
+V0039,Q14,question,A box on a frictionless floor is pushed with a constant net force. What happens to its velocity?,A,It stays constant,0,cant explain,UNKNOWN,vague
+V0040,Q14,question,A box on a frictionless floor is pushed with a constant net force. What happens to its velocity?,C,It increases then levels off,0,common sense,UNKNOWN,vague
+V0041,Q14,question,A box on a frictionless floor is pushed with a constant net force. What happens to its velocity?,D,It decreases,0,just a guess,UNKNOWN,vague
+V0042,Q15,question,A lift (elevator) is moving upward at a steady 2 m/s. What is the net force on it?,A,"Upward, because it is moving up",0,just a guess,UNKNOWN,vague
+V0043,Q15,question,A lift (elevator) is moving upward at a steady 2 m/s. What is the net force on it?,C,"Downward, because gravity acts",0,i remember this,UNKNOWN,vague
+V0044,Q15,question,A lift (elevator) is moving upward at a steady 2 m/s. What is the net force on it?,D,Upward and equal to its weight,0,because,UNKNOWN,vague
+V0045,Q16,question,A car cruises along a straight highway at a constant 80 km/h. The net force on the car is…,A,"Forward, from the engine",0,the usual,UNKNOWN,vague
+V0046,Q16,question,A car cruises along a straight highway at a constant 80 km/h. The net force on the car is…,C,"Backward, from friction",0,gut feeling,UNKNOWN,vague
+V0047,Q16,question,A car cruises along a straight highway at a constant 80 km/h. The net force on the car is…,D,Forward and proportional to 80 km/h,0,it's the answer,UNKNOWN,vague
+V0048,Q17,question,You double the constant force you apply to a trolley on a frictionless track. What happens?,A,Its speed instantly doubles and stays there,0,logic,UNKNOWN,vague
+V0049,Q17,question,You double the constant force you apply to a trolley on a frictionless track. What happens?,C,Its mass halves,0,it just is,UNKNOWN,vague
+V0050,Q17,question,You double the constant force you apply to a trolley on a frictionless track. What happens?,D,Its speed becomes constant at a higher value,0,cant explain,UNKNOWN,vague
+V0051,Q18,question,A skydiver has reached terminal velocity and falls at a constant speed. Which is true?,A,"Gravity is larger than air drag, which is why she keeps falling",0,it seemed right,UNKNOWN,vague
+V0052,Q18,question,A skydiver has reached terminal velocity and falls at a constant speed. Which is true?,C,Air drag is larger than gravity,0,it just is,UNKNOWN,vague
+V0053,Q18,question,A skydiver has reached terminal velocity and falls at a constant speed. Which is true?,D,Her acceleration is g,0,just a guess,UNKNOWN,vague
+V0054,Q19,question,A crate is dragged across a rough floor at constant velocity by a rope. How does the rope's pull compare with friction?,A,Pull is larger than friction — otherwise it would not move,0,because physics,UNKNOWN,vague
+V0055,Q19,question,A crate is dragged across a rough floor at constant velocity by a rope. How does the rope's pull compare with friction?,C,Friction is larger than the pull,0,idk,UNKNOWN,vague
+V0056,Q19,question,A crate is dragged across a rough floor at constant velocity by a rope. How does the rope's pull compare with friction?,D,"Pull is larger, and the extra force is stored in the crate",0,because,UNKNOWN,vague
+V0057,Q20,question,"A model rocket's engine provides a constant thrust greater than its weight. While the engine burns, the rocket's speed…",A,"Is constant, matching the constant thrust",0,that one,UNKNOWN,vague
+V0058,Q20,question,"A model rocket's engine provides a constant thrust greater than its weight. While the engine burns, the rocket's speed…",C,Increases only until the thrust is 'used up',0,i remember this,UNKNOWN,vague
+V0059,Q20,question,"A model rocket's engine provides a constant thrust greater than its weight. While the engine burns, the rocket's speed…",D,Is zero until thrust exceeds weight by a lot,0,it just is,UNKNOWN,vague
+V0060,Q21,question,"A large truck collides head-on with a small car. During the collision, how do the forces compare?",A,The truck exerts a larger force on the car,0,i think so,UNKNOWN,vague
+V0061,Q21,question,"A large truck collides head-on with a small car. During the collision, how do the forces compare?",C,The car exerts a larger force on the truck,0,it seemed right,UNKNOWN,vague
+V0062,Q21,question,"A large truck collides head-on with a small car. During the collision, how do the forces compare?",D,"The truck exerts a force, the car only receives one",0,just a guess,UNKNOWN,vague
+V0063,Q22,question,A mosquito splats against the windscreen of a bus moving at 60 km/h. Compare the force of the bus on the mosquito with the force of the mosquito on the bus.,A,The bus exerts a much larger force,0,it seemed right,UNKNOWN,vague
+V0064,Q22,question,A mosquito splats against the windscreen of a bus moving at 60 km/h. Compare the force of the bus on the mosquito with the force of the mosquito on the bus.,C,The mosquito exerts a larger force because it is the one that gets destroyed,0,not sure,UNKNOWN,vague
+V0065,Q22,question,A mosquito splats against the windscreen of a bus moving at 60 km/h. Compare the force of the bus on the mosquito with the force of the mosquito on the bus.,D,The mosquito exerts no force on the bus,0,the usual,UNKNOWN,vague
+V0066,Q23,question,The Earth pulls on a falling apple with gravity. How does the apple's pull on the Earth compare?,A,The apple pulls much less because it is so small,0,just a guess,UNKNOWN,vague
+V0067,Q23,question,The Earth pulls on a falling apple with gravity. How does the apple's pull on the Earth compare?,C,The apple does not pull the Earth at all,0,obviously,UNKNOWN,vague
+V0068,Q23,question,The Earth pulls on a falling apple with gravity. How does the apple's pull on the Earth compare?,D,The apple pulls more because it is the one accelerating,0,because physics,UNKNOWN,vague
+V0069,Q24,question,You push as hard as you can on a solid wall and it does not move. Which is true?,B,"The wall does not push back, which is why it does not move",0,my teacher said,UNKNOWN,vague
+V0070,Q24,question,You push as hard as you can on a solid wall and it does not move. Which is true?,C,You push harder than the wall pushes back,0,idk,UNKNOWN,vague
+V0071,Q24,question,You push as hard as you can on a solid wall and it does not move. Which is true?,D,"The wall pushes back harder, which is why you cannot move it",0,that one,UNKNOWN,vague
+V0072,Q25,question,"In a tug-of-war, Team A drags Team B across the line. During the pull, compare the force of A on the rope with the force of B on the rope.",A,A pulls the rope harder than B,0,cant explain,UNKNOWN,vague
+V0073,Q25,question,"In a tug-of-war, Team A drags Team B across the line. During the pull, compare the force of A on the rope with the force of B on the rope.",C,B pulls harder but slips,0,i remember this,UNKNOWN,vague
+V0074,Q25,question,"In a tug-of-war, Team A drags Team B across the line. During the pull, compare the force of A on the rope with the force of B on the rope.",D,A pulls harder because A is heavier,0,because yes,UNKNOWN,vague
+V0075,Q26,question,A fast-moving cyclist bumps into a stationary pedestrian. During the contact…,A,The cyclist exerts a larger force because of her speed,0,logic,UNKNOWN,vague
+V0076,Q26,question,A fast-moving cyclist bumps into a stationary pedestrian. During the contact…,C,The pedestrian exerts a larger force because he was still,0,logic,UNKNOWN,vague
+V0077,Q26,question,A fast-moving cyclist bumps into a stationary pedestrian. During the contact…,D,The cyclist exerts a larger force because she has more momentum,0,logic,UNKNOWN,vague
+V0078,Q27,question,A bowling ball and a tennis ball are dropped from the same height in a vacuum chamber. Which lands first?,A,The bowling ball,0,because,UNKNOWN,vague
+V0079,Q27,question,A bowling ball and a tennis ball are dropped from the same height in a vacuum chamber. Which lands first?,C,The tennis ball,0,common sense,UNKNOWN,vague
+V0080,Q27,question,A bowling ball and a tennis ball are dropped from the same height in a vacuum chamber. Which lands first?,D,"The bowling ball, but only by a tiny amount",0,no idea,UNKNOWN,vague
+V0081,Q28,question,On the Moon an astronaut drops a hammer and a feather together. What happens?,A,The hammer lands first,0,no idea,UNKNOWN,vague
+V0082,Q28,question,On the Moon an astronaut drops a hammer and a feather together. What happens?,C,The feather floats and never lands,0,not sure,UNKNOWN,vague
+V0083,Q28,question,On the Moon an astronaut drops a hammer and a feather together. What happens?,D,The feather lands first because it is lighter,0,the usual,UNKNOWN,vague
+V0084,Q29,question,Ball X has twice the mass of ball Y. Both are released from rest (no air). The acceleration of X is…,A,Twice that of Y,0,no idea,UNKNOWN,vague
+V0085,Q29,question,Ball X has twice the mass of ball Y. Both are released from rest (no air). The acceleration of X is…,C,Half that of Y,0,it makes sense,UNKNOWN,vague
+V0086,Q29,question,Ball X has twice the mass of ball Y. Both are released from rest (no air). The acceleration of X is…,D,"Larger than Y, because gravity pulls it harder",0,gut feeling,UNKNOWN,vague
+V0087,Q30,question,A 90 kg adult and a 30 kg child jump off a diving platform at the same moment (ignore air). Who reaches the water first?,A,The adult,0,just a guess,UNKNOWN,vague
+V0088,Q30,question,A 90 kg adult and a 30 kg child jump off a diving platform at the same moment (ignore air). Who reaches the water first?,C,The child,0,logic,UNKNOWN,vague
+V0089,Q30,question,A 90 kg adult and a 30 kg child jump off a diving platform at the same moment (ignore air). Who reaches the water first?,D,"The adult, because the Earth pulls three times harder",0,my teacher said,UNKNOWN,vague
+V0090,P_VA_1,probe,A child on a swing reaches the highest point of the swing and pauses for an instant. What is the child's acceleration at that moment?,A,"Zero, since the child is momentarily still",0,logic,UNKNOWN,vague
+V0091,P_VA_1,probe,A child on a swing reaches the highest point of the swing and pauses for an instant. What is the child's acceleration at that moment?,C,Equal to the velocity,0,it seemed right,UNKNOWN,vague
+V0092,P_VA_1,probe,A child on a swing reaches the highest point of the swing and pauses for an instant. What is the child's acceleration at that moment?,D,"Non-zero, directed upward away from the ground",0,it just is,UNKNOWN,vague
+V0093,P_VA_2,probe,A mass on a spring bounces up and down. At the lowest point it is momentarily at rest. Its acceleration there is…,A,Zero,0,i think so,UNKNOWN,vague
+V0094,P_VA_2,probe,A mass on a spring bounces up and down. At the lowest point it is momentarily at rest. Its acceleration there is…,C,"Maximum, pointing downward",0,we learned this,UNKNOWN,vague
+V0095,P_VA_2,probe,A mass on a spring bounces up and down. At the lowest point it is momentarily at rest. Its acceleration there is…,D,"The same as its velocity, i.e. zero",0,seems logical,UNKNOWN,vague
+V0096,P_VA_3,probe,"A rubber ball hits a hard floor and, at the instant of maximum squash, is momentarily motionless. Which is true at that instant?",A,"Velocity zero, acceleration zero",0,not sure,UNKNOWN,vague
+V0097,P_VA_3,probe,"A rubber ball hits a hard floor and, at the instant of maximum squash, is momentarily motionless. Which is true at that instant?",C,"Velocity zero, acceleration g downward",0,just a guess,UNKNOWN,vague
+V0098,P_VA_3,probe,"A rubber ball hits a hard floor and, at the instant of maximum squash, is momentarily motionless. Which is true at that instant?",D,Velocity non-zero because it is about to bounce,0,i remember this,UNKNOWN,vague
+V0099,P_IM_1,probe,A bowling ball rolls across perfectly smooth ice after being released. Which forces act on it horizontally?,A,A forward force from the bowler that gradually dies away,0,trust me,UNKNOWN,vague
+V0100,P_IM_1,probe,A bowling ball rolls across perfectly smooth ice after being released. Which forces act on it horizontally?,C,A constant forward force equal to its weight,0,obviously,UNKNOWN,vague
+V0101,P_IM_1,probe,A bowling ball rolls across perfectly smooth ice after being released. Which forces act on it horizontally?,D,A forward force from the ice,0,it makes sense,UNKNOWN,vague
+V0102,P_IM_2,probe,A satellite coasts in orbit with its thrusters off. Why does it not slow down?,A,The launch rocket's force is still carried by it,0,the usual,UNKNOWN,vague
+V0103,P_IM_2,probe,A satellite coasts in orbit with its thrusters off. Why does it not slow down?,C,Gravity pushes it forward along the orbit,0,seems logical,UNKNOWN,vague
+V0104,P_IM_2,probe,A satellite coasts in orbit with its thrusters off. Why does it not slow down?,D,"It does slow down, very gradually, as the launch force fades",0,no idea,UNKNOWN,vague
+V0105,P_IM_3,probe,"A football has just been kicked and is rising through the air. Ignoring air, what force(s) act on it?",B,"Gravity plus the force of the kick, which is fading",0,obviously,UNKNOWN,vague
+V0106,P_IM_3,probe,"A football has just been kicked and is rising through the air. Ignoring air, what force(s) act on it?",C,"The force of the kick only, until it runs out",0,idk,UNKNOWN,vague
+V0107,P_IM_3,probe,"A football has just been kicked and is rising through the air. Ignoring air, what force(s) act on it?",D,An upward force larger than gravity,0,my teacher said,UNKNOWN,vague
+V0108,P_FV_1,probe,A cyclist pedals along a flat road at a constant 20 km/h. The net force on the bicycle is…,A,"Forward, from the pedalling",0,because,UNKNOWN,vague
+V0109,P_FV_1,probe,A cyclist pedals along a flat road at a constant 20 km/h. The net force on the bicycle is…,C,"Backward, from air resistance",0,trust me,UNKNOWN,vague
+V0110,P_FV_1,probe,A cyclist pedals along a flat road at a constant 20 km/h. The net force on the bicycle is…,D,"Forward, and larger the faster she goes",0,the usual,UNKNOWN,vague
+V0111,P_FV_2,probe,A sled on frictionless ice is pulled with a constant 10 N force for 5 seconds. During those 5 seconds its speed…,A,Jumps to one value and stays there,0,guessing,UNKNOWN,vague
+V0112,P_FV_2,probe,A sled on frictionless ice is pulled with a constant 10 N force for 5 seconds. During those 5 seconds its speed…,C,"Increases, then becomes constant once the force 'settles in'",0,obviously,UNKNOWN,vague
+V0113,P_FV_2,probe,A sled on frictionless ice is pulled with a constant 10 N force for 5 seconds. During those 5 seconds its speed…,D,Stays zero because 10 N is small,0,it seemed right,UNKNOWN,vague
+V0114,P_FV_3,probe,A parachutist descends at a steady 5 m/s. Compare the upward drag force with her weight.,A,"Weight is larger, which is why she is moving down",0,idk,UNKNOWN,vague
+V0115,P_FV_3,probe,A parachutist descends at a steady 5 m/s. Compare the upward drag force with her weight.,C,Drag is larger,0,that one,UNKNOWN,vague
+V0116,P_FV_3,probe,A parachutist descends at a steady 5 m/s. Compare the upward drag force with her weight.,D,Weight is larger and the difference sets her speed,0,common sense,UNKNOWN,vague
+V0117,P_TL_1,probe,"A mosquito flies into the front of a moving truck. During the impact, how do the forces compare?",A,The truck's force on the mosquito is far larger,0,i think so,UNKNOWN,vague
+V0118,P_TL_1,probe,"A mosquito flies into the front of a moving truck. During the impact, how do the forces compare?",C,Only the truck exerts a force,0,no idea,UNKNOWN,vague
+V0119,P_TL_1,probe,"A mosquito flies into the front of a moving truck. During the impact, how do the forces compare?",D,The mosquito's force is larger because it is the one destroyed,0,common sense,UNKNOWN,vague
+V0120,P_TL_2,probe,An astronaut (80 kg) floating in space pushes off a 400 kg satellite. Compare the force on the astronaut with the force on the satellite.,A,The satellite experiences more force because it is heavier,0,no idea,UNKNOWN,vague
+V0121,P_TL_2,probe,An astronaut (80 kg) floating in space pushes off a 400 kg satellite. Compare the force on the astronaut with the force on the satellite.,C,The astronaut experiences more force because she did the pushing,0,we learned this,UNKNOWN,vague
+V0122,P_TL_2,probe,An astronaut (80 kg) floating in space pushes off a 400 kg satellite. Compare the force on the astronaut with the force on the satellite.,D,"Only the astronaut feels a force, since the satellite barely moves",0,seems logical,UNKNOWN,vague
+V0123,P_TL_3,probe,A heavy book rests on a table. The Earth pulls the book down with 20 N. How hard does the book pull the Earth up?,A,Much less than 20 N — the Earth is enormous,0,it's the answer,UNKNOWN,vague
+V0124,P_TL_3,probe,A heavy book rests on a table. The Earth pulls the book down with 20 N. How hard does the book pull the Earth up?,C,Zero — the book is not moving,0,it makes sense,UNKNOWN,vague
+V0125,P_TL_3,probe,A heavy book rests on a table. The Earth pulls the book down with 20 N. How hard does the book pull the Earth up?,D,"20 N, but only while the book is falling",0,my teacher said,UNKNOWN,vague
+V0126,P_HF_1,probe,A 1-rupee coin and a 10-rupee coin (much heavier) are released together inside an evacuated tube. Which reaches the bottom first?,A,The 10-rupee coin,0,it seemed right,UNKNOWN,vague
+V0127,P_HF_1,probe,A 1-rupee coin and a 10-rupee coin (much heavier) are released together inside an evacuated tube. Which reaches the bottom first?,C,The 1-rupee coin,0,i remember this,UNKNOWN,vague
+V0128,P_HF_1,probe,A 1-rupee coin and a 10-rupee coin (much heavier) are released together inside an evacuated tube. Which reaches the bottom first?,D,"The 10-rupee coin, but only slightly",0,obviously,UNKNOWN,vague
+V0129,P_HF_2,probe,"A lorry and a scooter drive off a cliff edge at the same speed, side by side (ignore air). Which hits the ground first?",A,The lorry,0,that one,UNKNOWN,vague
+V0130,P_HF_2,probe,"A lorry and a scooter drive off a cliff edge at the same speed, side by side (ignore air). Which hits the ground first?",C,The scooter,0,no idea,UNKNOWN,vague
+V0131,P_HF_2,probe,"A lorry and a scooter drive off a cliff edge at the same speed, side by side (ignore air). Which hits the ground first?",D,"The lorry, because gravity's pull on it is stronger",0,guessing,UNKNOWN,vague
+V0132,P_HF_3,probe,A 5 kg stone and a 1 kg stone are dropped into a deep well together. Compare their accelerations (ignore air).,A,The 5 kg stone accelerates five times faster,0,it makes sense,UNKNOWN,vague
+V0133,P_HF_3,probe,A 5 kg stone and a 1 kg stone are dropped into a deep well together. Compare their accelerations (ignore air).,C,The 1 kg stone accelerates faster,0,it's the answer,UNKNOWN,vague
+V0134,P_HF_3,probe,A 5 kg stone and a 1 kg stone are dropped into a deep well together. Compare their accelerations (ignore air).,D,The 5 kg stone accelerates faster because the pull on it is bigger,0,logic,UNKNOWN,vague

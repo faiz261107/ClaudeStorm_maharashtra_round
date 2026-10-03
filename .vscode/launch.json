@@ -1,0 +1,44 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Re:Learn — run everything (train if needed + server)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/run.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "justMyCode": true
+    },
+    {
+      "name": "API only (uvicorn, auto-reload)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["backend.app:app", "--reload", "--port", "8000"],
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "jinja": true
+    },
+    {
+      "name": "ML: generate dataset",
+      "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/ml/generate_dataset.py", "console": "integratedTerminal", "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "ML: train",
+      "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/ml/train.py", "console": "integratedTerminal", "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "ML: evaluate",
+      "type": "debugpy", "request": "launch",
+      "program": "${workspaceFolder}/ml/evaluate.py", "console": "integratedTerminal", "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Tests (pytest)",
+      "type": "debugpy", "request": "launch",
+      "module": "pytest", "args": ["-q", "tests"], "console": "integratedTerminal", "cwd": "${workspaceFolder}"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "1. Install dependencies", "type": "shell", "command": "pip install -r requirements.txt", "problemMatcher": [] },
+    { "label": "2. Generate dataset", "type": "shell", "command": "python ml/generate_dataset.py", "problemMatcher": [] },
+    { "label": "3. Train model", "type": "shell", "command": "python ml/train.py", "problemMatcher": [], "dependsOn": ["2. Generate dataset"] },
+    { "label": "4. Evaluate model", "type": "shell", "command": "python ml/evaluate.py", "problemMatcher": [], "dependsOn": ["3. Train model"] },
+    { "label": "5. Run tests", "type": "shell", "command": "python -m pytest -q tests", "problemMatcher": [], "group": "test" },
+    { "label": "6. Start Re:Learn", "type": "shell", "command": "python run.py", "problemMatcher": [], "group": { "kind": "build", "isDefault": true }, "isBackground": true }
+  ]
+}
