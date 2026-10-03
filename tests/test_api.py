@@ -22,7 +22,7 @@ os.environ.setdefault("RELEARN_BACKEND", "sklearn")
 from fastapi.testclient import TestClient  # noqa: E402
 
 from backend import learner_model  # noqa: E402
-from backend.app import app  # noqa: E402
+from backend.app import TEACHER_PIN, app  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -32,6 +32,8 @@ def client():
         db.unlink()
     learner_model._store = None
     with TestClient(app) as c:
+        token = c.post("/api/teacher/login", json={"pin": TEACHER_PIN}).json()["token"]
+        c.headers.update({"X-Teacher-Token": token})  # teacher endpoints are PIN-protected
         yield c
     if learner_model._store is not None:  # Windows can't delete an open SQLite file
         learner_model._store.conn.close()
@@ -174,3 +176,174 @@ def test_metrics_endpoint(client):
     if m.get("available"):
         assert m["heldout_questions_only"]["macro_f1"] > 0.5
         assert "confusion_matrix" in m
+
+
+# ---------------------------------------------------------------- v2 features
+
+def test_working_mode_diagnoses_from_the_working(client):
+    r = diagnose_w(client, "Wk", "W03", 10000, "40000 / 4 = 10000 because the car is a quarter of the mass")
+    assert r["status"] == "misconception" and r["label"] == "THIRD_LAW" and r["source"] == "working-rules"
+    assert r["rule"]["why"] and r["worked"] and r["answer_shown"].startswith("40000")
+    r2 = diagnose_w(client, "Wk", "W01", 12, "a = 6/2 = 3, v = 3 x 4 = 12")
+    assert r2["status"] == "correct"
+    r3 = diagnose_w(client, "Wk", "W02", 98, "a = m x g = 10 x 9.8 = 98")
+    assert r3["status"] == "misconception" and r3["label"] == "HEAVIER_FASTER"
+
+
+def diagnose_w(c, learner, qid, value, working):
+    r = c.post("/api/diagnose", json={"learner": learner, "question_id": qid, "numeric_value": value, "explanation": working})
+    assert r.status_code == 200, r.text
+    return r.json()
+
+
+def test_diagram_mode_and_sentence_tiebreak(client):
+    gravity_normal = [{"force": "gravity", "direction": "down", "size": 2}, {"force": "normal force", "direction": "up", "size": 2}]
+    r = client.post("/api/diagnose", json={"learner": "Dr", "question_id": "F02", "diagram": gravity_normal + [{"force": "forward push", "direction": "right", "size": 2}],
+                                            "explanation": "it needs a push to keep going at the same speed"}).json()
+    assert r["status"] == "misconception" and r["label"] == "FORCE_VELOCITY" and r["source"] == "diagram+text"
+    assert r["diagram_feedback"]["extra"] == ["forward push"] and r["ideal_diagram"]
+    ok = client.post("/api/diagnose", json={"learner": "Dr", "question_id": "F02", "diagram": gravity_normal, "explanation": ""}).json()
+    assert ok["status"] == "correct"
+    empty = client.post("/api/diagnose", json={"learner": "Dr", "question_id": "F04", "diagram": [], "explanation": ""}).json()
+    assert empty["status"] == "misconception" and empty["label"] == "VA_CONFUSION"
+
+
+def test_personalised_fix_quotes_the_learner(client):
+    r = diagnose(client, "Pz", "Q01", "A", "The force of the throw has run out so it stops")
+    p = r["personalised"]
+    assert p["quote"].startswith("The force of the throw") and p["trigger"] == "force of the throw" and "applying that force" in p["bridge"]
+    assert p["source"] in ("rules", "llm")
+
+
+def test_struggle_signal_blocks_confidently_held(client):
+    r = client.post("/api/diagnose", json={"learner": "Hz", "question_id": "Q21", "choice": "A", "explanation": "the truck is bigger so it pushes harder",
+                                            "confidence": "certain", "time_ms": 120000, "edits": 9}).json()
+    assert r["hesitant"] is True and r["confidently_held"] is False
+
+
+def test_cross_session_recheck(client):
+    L = "Cross"
+    s1 = client.post("/api/session/start", json={"learner": L}).json()
+    assert s1["welcome"] is None
+    d = client.post("/api/diagnose", json={"learner": L, "session_id": s1["session_id"], "question_id": "Q07", "choice": "B",
+                                            "explanation": "the flick's force is still in the coin pushing it up"}).json()
+    assert d["label"] == "IMPETUS"
+    p1 = reassess(client, L, "IMPETUS", d["probe"]["id"], "B", "no horizontal force, nothing is pushing it, inertia keeps it moving")
+    r = client.post("/api/reassess", json={"learner": L, "session_id": s1["session_id"], "misconception": "IMPETUS", "probe_id": p1["probe"]["id"],
+                                            "choice": "B", "explanation": "no force opposes it so it keeps its speed, the launch force ended long ago"}).json()
+    assert r["state"] == "resolved"
+    client.post("/api/session/finish", json={"session_id": s1["session_id"]})
+    s2 = client.post("/api/session/start", json={"learner": L}).json()
+    assert s2["welcome"]["returning"] and [m["id"] for m in s2["welcome"]["to_verify"]] == ["IMPETUS"]
+    rc = client.get(f"/api/recheck/{L}?session_id={s2['session_id']}").json()
+    assert rc["probe"] and rc["cross_session"] is True
+    y = client.post("/api/reassess", json={"learner": L, "session_id": s2["session_id"], "misconception": "IMPETUS", "probe_id": rc["probe"]["id"],
+                                            "choice": "A", "explanation": "gravity only, the kick force is gone the moment it leaves the foot", "phase": "recheck"}).json()
+    assert y["resolved"] is True and y["held_across_sessions"] is True
+    assert client.get(f"/api/recheck/{L}?session_id={s2['session_id']}").json()["probe"] is None
+    assert client.get(f"/api/report/{L}").json()["summary"]["held_across_sessions"] == 1
+
+
+def test_labelling_pipeline_and_pdf(client):
+    pend = client.get("/api/labels/pending").json()
+    assert pend["rows"] and "NONE" in pend["labels"]
+    r = client.post("/api/labels", json={"attempt_id": pend["rows"][0]["id"], "label": "IMPETUS"}).json()
+    assert r["ok"]
+    real = ROOT / "ml" / "data" / "real_responses.csv"
+    saved = real.read_bytes() if real.exists() else None  # never clobber real exported labels
+    try:
+        e = client.post("/api/labels/export").json()
+        assert e["rows"] >= 1 and e["path"].endswith("real_responses.csv")
+    finally:
+        real.write_bytes(saved) if saved is not None else real.unlink(missing_ok=True)
+    pdf = client.get("/api/report/Cross/pdf")
+    assert pdf.status_code == 200 and pdf.headers["content-type"] == "application/pdf" and pdf.content[:4] == b"%PDF"
+
+
+def test_discovery_clusters_abstained_explanations(client):
+    vague = ["the spin energy holds it there for a bit", "spinning energy keeps it hanging", "its rotation energy makes it float",
+             "spin makes it hover a moment", "momentum zero at top so nothing happens", "no momentum means nothing acts on it"]
+    for i, e in enumerate(vague):
+        client.post("/api/diagnose", json={"learner": f"V{i}", "question_id": "Q02", "choice": "D", "explanation": e})
+    d = client.get("/api/discover").json()
+    assert "clusters" in d and d["n"] >= 0
+
+
+def test_upload_image(client):
+    import io
+    from PIL import Image
+    buf = io.BytesIO(); Image.new("RGB", (30, 30), "white").save(buf, "PNG")
+    r = client.post("/api/upload", files={"file": ("w.png", buf.getvalue(), "image/png")}).json()
+    assert r["image_id"].endswith(".png") and client.get(r["url"]).status_code == 200
+    (ROOT / "backend" / "uploads" / r["image_id"]).unlink(missing_ok=True)
+
+
+def test_upload_rejects_non_images(client):
+    for name, data in [("notes.png", b"definitely not an image"), ("empty.png", b"")]:
+        r = client.post("/api/upload", files={"file": (name, data, "image/png")})
+        assert r.status_code == 400, name
+
+
+def test_working_rejects_non_finite_number(client):
+    r = client.post("/api/diagnose", content=b'{"learner":"Nan","question_id":"W01","numeric_value":NaN,"explanation":"a = f/m"}',
+                    headers={"Content-Type": "application/json"})
+    assert r.status_code == 400
+
+
+# ---------------------------------------------------------------- tutor response (NLP reply to the explanation)
+
+def test_tutor_response_on_every_status(client):
+    r = diagnose(client, "Tt", "Q01", "B", "It is still slowing down because of the throw force, definitely")
+    t = r["tutor"]
+    assert r["status"] == "flawed_reasoning" and t["source"] in ("rules", "llm")
+    assert "throw force" in t["text"] and "Tt" in t["text"] and "force" in t["signals"]["concepts"]
+    c = diagnose(client, "Tt", "Q21", "B", "third law, equal and opposite, the car just accelerates more")
+    assert c["status"] == "correct" and c["tutor"]["text"] and "third_law" in c["tutor"]["signals"]["concepts"]
+    u = diagnose(client, "Tt", "Q27", "A", "idk")
+    assert u["status"] == "unknown" and "why" in u["tutor"]["text"].lower()
+    p = r["probe"]
+    pr = reassess(client, "Tt", "IMPETUS", p["id"], "B", "nothing pushes it after release, only gravity acts, inertia keeps it moving")
+    assert pr["resolved"] is True and pr["tutor"]["text"]
+
+
+# ---------------------------------------------------------------- voice explanation NLP + Ask the tutor
+
+def test_nlp_analyse_live_readout(client):
+    r = client.post("/api/nlp/analyse", json={"text": "it stops so the velocity is zero"}).json()
+    assert "velocity" in r["concepts"] and r["has_reason"] is True and r["ready"] is True
+    short = client.post("/api/nlp/analyse", json={"text": "it stops"}).json()
+    assert short["ready"] is False and short["nudge"]
+
+
+def test_ask_the_tutor(client):
+    q = client.post("/api/ask", json={"text": "what is acceleration?", "item_id": "Q01"}).json()
+    assert q["intent"] == "question" and "velocity" in q["reply"].lower()
+    a = client.post("/api/ask", json={"text": "A because it stops", "item_id": "Q01"}).json()
+    assert a["intent"] == "redirect"
+    assert client.post("/api/ask", json={"text": "hi"}).json()["intent"] == "greeting"
+
+
+# ---------------------------------------------------------------- teacher PIN
+
+def test_teacher_endpoints_need_pin(client):
+    anon = TestClient(app)
+    for path in ["/api/class", "/api/labels/pending", "/api/discover", "/api/activity", "/api/feedback/export"]:
+        assert anon.get(path).status_code == 401, path
+    assert anon.post("/api/labels", json={"attempt_id": 1, "label": "IMPETUS"}).status_code == 401
+    assert anon.post("/api/teacher/login", json={"pin": "wrong"}).status_code == 401
+    assert anon.get("/api/questions").status_code == 200  # learner side stays open
+    tok = anon.post("/api/teacher/login", json={"pin": TEACHER_PIN}).json()["token"]
+    assert anon.get("/api/activity", headers={"X-Teacher-Token": tok}).status_code == 200
+    assert anon.post("/api/teacher/logout", headers={"X-Teacher-Token": tok}).status_code == 200
+    assert anon.get("/api/activity", headers={"X-Teacher-Token": tok}).status_code == 401
+
+
+def test_live_activity_feed(client):
+    diagnose(client, "Feed", "Q01", "A", "It stops at the top, so velocity is zero.")
+    rows = client.get("/api/activity").json()["rows"]
+    assert rows[0]["learner"] == "Feed" and rows[0]["name"] == "Velocity–acceleration confusion"
+
+
+def test_tutor_answers_capability_questions(client):
+    r = client.post("/api/ask", json={"text": "what all can u explain"}).json()
+    assert r["intent"] == "capabilities" and "Newton" in r["reply"]

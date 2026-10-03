@@ -12,9 +12,12 @@ Everything is CPU-only and takes a few seconds on first run.
 from __future__ import annotations
 
 import argparse
+import json
+import socket
 import subprocess
 import sys
 import threading
+import urllib.request
 import webbrowser
 from pathlib import Path
 
@@ -29,6 +32,23 @@ PY = sys.executable
 def run(label: str, *args: str) -> None:
     print(f"\n==> {label}")
     subprocess.run([PY, *args], cwd=ROOT, check=True)
+
+
+def port_free(host: str, port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.bind((host, port))
+            return True
+        except OSError:
+            return False
+
+
+def relearn_running(url: str) -> bool:
+    try:
+        with urllib.request.urlopen(f"{url}/api/health", timeout=2) as r:
+            return bool(json.loads(r.read()).get("ok"))
+    except Exception:
+        return False
 
 
 def main() -> None:
@@ -54,6 +74,20 @@ def main() -> None:
         run("Evaluating (held-out questions, unseen misconceptions, calibration)", "ml/evaluate.py")
 
     url = f"http://{a.host}:{a.port}"
+    if not port_free(a.host, a.port):
+        if relearn_running(url):
+            # Re:Learn is already up (e.g. started from another window): reuse it instead of crashing
+            print(f"\n==> Re:Learn is already running at {url} - opening it.")
+            print("    To restart it, close the other window first (or run:  python run.py --port 8001)")
+            if not a.no_open:
+                webbrowser.open(url)
+            return
+        busy = a.port
+        a.port = next((p for p in range(a.port + 1, a.port + 30) if port_free(a.host, p)), 0)
+        if not a.port:
+            sys.exit(f"Port {busy} and the next 29 ports are all busy. Close something or pass --port.")
+        print(f"\n==> Port {busy} is used by another program, so using port {a.port} instead.")
+        url = f"http://{a.host}:{a.port}"
     print(f"\n==> Starting Re:Learn at {url}  (Ctrl+C to stop)\n")
     if not a.no_open:
         threading.Timer(1.5, lambda: webbrowser.open(url)).start()

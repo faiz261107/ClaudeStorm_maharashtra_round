@@ -35,7 +35,6 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from backend.data import (  # noqa: E402
-    MISCONCEPTION_IDS,
     NONE_LABEL,
     PROBES,
     QUESTIONS,

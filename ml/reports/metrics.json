@@ -315,9 +315,10 @@
     "macro_f1": 0.9322727980080922,
     "abstained": 0.11764705882352941
   },
+  "real_rows": null,
   "vague_abstain_rate": 0.9407407407407408,
   "vague_n": 135,
-  "latency_ms_per_diagnosis": 2.884318500000518,
+  "latency_ms_per_diagnosis": 2.176814500016917,
   "machine": "AMD64 / CPython 3.13.9",
   "targets_met": {
     "macro_f1_heldout_questions": true,

@@ -18,12 +18,14 @@ Start a **Quick (8 questions)** session as **Aiman**.
 
 ## 1 · Same wrong answer, two different diagnoses (45 s)
 
-**Q1 — ball at the top of its flight.** Pick **A (zero)**, confidence **certain**, explain:
+**Q1 — ball at the top of its flight.** Pick **A (zero)**, confidence **certain**, tap **🎙 Tap and speak** and say
+(watch the "I heard: velocity · rest · reason ✓" readout appear as you talk):
 
 > It stops at the top, so velocity is zero.
 
-→ **Misconception found · Velocity–acceleration confusion** (≈98 %). Point out: *held with certainty* badge,
-confidence meter, candidate bars, "That's not what I meant".
+→ **Misconception found · Velocity–acceleration confusion** (≈98 %). Read the **Tutor** reply aloud: it quotes the
+student's own phrase ("stops"), credits what was right, explains the physics and ends with a question. Point out the
+*held with certainty* badge, confidence meter, candidate bars, "That's not what I meant".
 
 Now say: *"A second student picks the same option but writes…"* — open a second tab, start as **Riya**, Q1, pick **A**:
 
@@ -87,10 +89,26 @@ Answer it *wrong on purpose* — pick **A**, write `it is not moving so no accel
 **It came back · recurring.** The thinking map re-opens the idea. "A correct follow-up is not proof of learning —
 and neither is a fix that fades."
 
+## 6b · Three modalities + personalised fix (30 s)
+
+- The Quick session includes **F02 (draw the forces on a sliding puck)**: add gravity ↓, normal ↑ and a *forward push* →, write "the hit is still pushing it". → The diagram itself is diagnosed (extra arrow), your sentence breaks the impetus / force→velocity tie, and the correct diagram is drawn next to yours.
+- **W03 (show your working)**: answer `10000` with "40000 / 4 because the car is a quarter of the mass". → The rule that caught it is quoted back; correct working shown.
+- On any result, read the **tutor reply** at the top: it walks the learner's own sentence claim by claim — *You said "the ball stops" — true… Then you said "acceleration must be zero" — this is the step that breaks…* — then one line of physics and a question. Nothing generic: type a different explanation and the reply changes with it. (Set `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` for a GPT-style generated version grounded in the same claims.)
+- Click **🎙 Say it** and dictate an explanation; or **📷 Photo of handwriting** to OCR a page.
+
+## 6c · Come back tomorrow (20 s)
+
+Finish, then start a new session with the **same name**. The welcome card lists what was resolved last time and opens with a **new-session recheck**. Pass it → "held across sessions". That is the answer to "does learning stick?".
+
+## 6d · Ask the tutor (10 s)
+
+In the sidebar, tap the mic and ask *"what is acceleration?"* — it answers and reads it aloud. Ask *"why does the ball come back down?"*.
+
 ## 7 · Report, teacher view, evidence (15 s)
 
 - Sidebar → **Finish & see report**: right first time / found / fixed / recurring, timeline ribbon.
-- **Teacher** tab: which ideas the class holds (Aiman, Riya, Sam), by state.
+- **Teacher** tab (PIN `1234`): **live activity feed** (have a friend answer on their phone and it appears within 5 s), class overview, **heatmap** (misconception × learner), **Label real responses** (grow the dataset from real writing, export, retrain), **Discover** (clusters of explanations the model couldn't place — candidate new misconceptions).
+- Toggle **dark mode** (☀/☾ in the header). Download the **PDF report**.
 - **Evaluation** tab: held-out macro-F1 0.99, confusable-pair accuracy 0.97, flawed-reasoning recall 0.98,
   unseen-misconception top-1 0.85, ECE 0.05, confusion matrix — all PRD targets met, split by question.
 

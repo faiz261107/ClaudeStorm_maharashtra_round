@@ -9,7 +9,7 @@ Dataset: 1831 rows, 45 items, 85 hand-written. Split by item: 31 train / 14 test
 | Flawed-reasoning recall (n=62) | 0.984 | ≥ 0.70 | ✅ |
 | Unseen-misconception top-1 (leave-one-out) | 0.854 | ≥ 0.60 | ✅ |
 | Calibration ECE | 0.060 | ≤ 0.10 | ✅ |
-| Latency per diagnosis | 2.9 ms | < 1000 ms | ✅ |
+| Latency per diagnosis | 2.2 ms | < 1000 ms | ✅ |
 
 ## Secondary
 - Held-out accuracy, all items: 0.993 (n=535)
@@ -17,6 +17,7 @@ Dataset: 1831 rows, 45 items, 85 hand-written. Split by item: 31 train / 14 test
 - Template-only model on ALL hand-written rows: acc 0.933, macro-F1 0.932, abstained 12%
 - Flawed-reasoning false-alarm rate: 0.006
 - Vague explanations sent to *unknown*: 94% (n=135); abstain rate on valid rows: 0%
+- Real learner rows: none labelled yet (Teacher tab → Label real responses → Export)
 
 ## Unseen misconception (leave-one-misconception-out, embedding fallback)
 | Held out | n | top-1 | top-1 when answered | abstained | false-positive rate |

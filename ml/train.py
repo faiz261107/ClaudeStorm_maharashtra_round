@@ -55,6 +55,10 @@ def make_split(seed: int = SEED) -> dict:
 
 
 def main() -> None:
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--real", action="store_true", help="also train the served model on ml/data/real_responses.csv (teacher-labelled rows)")
+    args = ap.parse_args()
     if not DATA.exists():
         print("Dataset missing – generating it first.")
         from ml.generate_dataset import main as gen
@@ -82,8 +86,21 @@ def main() -> None:
     print(f"classifier_template.joblib trained on template rows only   ({time.time() - t0:.1f}s)")
 
     t0 = time.time()
-    MisconceptionClassifier().fit(df.explanation, df.option_text, df.label) \
-        .save(MODEL_DIR / "classifier.joblib")
+    # Synthetic-only copy of the served model: evaluate.py scores real rows with this one,
+    # so folding real rows into training (--real) never leaks them into their own test.
+    synthetic = MisconceptionClassifier().fit(df.explanation, df.option_text, df.label)
+    synthetic.save(MODEL_DIR / "classifier_synthetic.joblib")
+    served = df
+    real_path = ROOT / "ml" / "data" / "real_responses.csv"
+    if args.real and real_path.exists():
+        real = pd.read_csv(real_path)
+        real = real[real.label != "OTHER"]  # "fits no known misconception" is not a trainable class
+        served = pd.concat([df, real[df.columns.intersection(real.columns)]], ignore_index=True)
+        print(f"  + {len(real)} real learner rows folded into the served model")
+        MisconceptionClassifier().fit(served.explanation, served.option_text, served.label) \
+            .save(MODEL_DIR / "classifier.joblib")
+    else:
+        synthetic.save(MODEL_DIR / "classifier.joblib")
     print(f"classifier.joblib          trained on all rows (served)    ({time.time() - t0:.1f}s)")
 
     descriptions = {k: v["description"] + " " + v["believes"] for k, v in MISCONCEPTIONS.items()}

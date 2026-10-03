@@ -48,7 +48,20 @@ CREATE TABLE IF NOT EXISTS feedback (
     id INTEGER PRIMARY KEY AUTOINCREMENT, learner TEXT, attempt_id INTEGER, suggested_label TEXT,
     note TEXT, ts REAL
 );
+CREATE TABLE IF NOT EXISTS labels (
+    attempt_id INTEGER PRIMARY KEY, label TEXT NOT NULL, labelled_by TEXT, ts REAL
+);
 """
+MIGRATIONS = [
+    "ALTER TABLE attempts ADD COLUMN time_ms INTEGER",
+    "ALTER TABLE attempts ADD COLUMN edits INTEGER",
+    "ALTER TABLE attempts ADD COLUMN mode TEXT DEFAULT 'choice'",
+    "ALTER TABLE attempts ADD COLUMN numeric_value REAL",
+    "ALTER TABLE misconception_state ADD COLUMN resolved_session INTEGER",
+    "ALTER TABLE misconception_state ADD COLUMN held_across_sessions INTEGER DEFAULT 0",
+    "ALTER TABLE attempts ADD COLUMN image_id TEXT",
+    "ALTER TABLE attempts ADD COLUMN input_method TEXT",
+]
 
 
 class LearnerStore:
@@ -58,6 +71,11 @@ class LearnerStore:
         self.conn = sqlite3.connect(str(self.path), check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
         self.conn.executescript(SCHEMA)
+        for m in MIGRATIONS:
+            try:
+                self.conn.execute(m)
+            except sqlite3.OperationalError:
+                pass  # column already exists
         self.conn.commit()
 
     # ---------------- sessions ----------------
@@ -67,6 +85,17 @@ class LearnerStore:
         self.conn.commit()
         return int(cur.lastrowid)
 
+    def session_count(self, learner: str) -> int:
+        return int(self.conn.execute("SELECT COUNT(*) FROM sessions WHERE learner=?", (learner,)).fetchone()[0])
+
+    def last_session(self, learner: str, before_id: int | None = None) -> dict | None:
+        q = "SELECT * FROM sessions WHERE learner=?" + (" AND id<?" if before_id else "") + " ORDER BY id DESC LIMIT 1"
+        row = self.conn.execute(q, (learner, before_id) if before_id else (learner,)).fetchone()
+        if not row:
+            return None
+        n = self.conn.execute("SELECT COUNT(*) FROM attempts WHERE session_id=? AND phase='question'", (row["id"],)).fetchone()[0]
+        return {"id": row["id"], "started": row["started"], "finished": row["finished"], "questions_answered": int(n)}
+
     def finish_session(self, session_id: int) -> None:
         self.conn.execute("UPDATE sessions SET finished=? WHERE id=?", (time.time(), session_id))
         self.conn.commit()
@@ -74,7 +103,9 @@ class LearnerStore:
     # ---------------- attempts ----------------
     def record_attempt(self, **kw) -> int:
         cols = ["learner", "session_id", "ts", "phase", "item_id", "choice", "correct", "explanation",
-                "self_confidence", "status", "label", "model_confidence", "target", "resolved", "latency_ms"]
+                "self_confidence", "status", "label", "model_confidence", "target", "resolved", "latency_ms",
+                "time_ms", "edits", "mode", "numeric_value", "image_id", "input_method"]
+        kw.setdefault("mode", "choice")
         kw.setdefault("ts", time.time())
         cur = self.conn.execute(
             f"INSERT INTO attempts({','.join(cols)}) VALUES ({','.join('?' * len(cols))})",
@@ -124,7 +155,7 @@ class LearnerStore:
                           (json.dumps(used), learner, m))
         self.conn.commit()
 
-    def on_probe(self, learner: str, m: str, passed: bool, phase: str = "probe") -> dict:
+    def on_probe(self, learner: str, m: str, passed: bool, phase: str = "probe", session_id: int | None = None) -> dict:
         """Apply a transfer-probe result. Returns {state, probes_passed, probes_failed, resolved_now}."""
         row = self.get_state(learner, m)
         if row is None:
@@ -136,10 +167,12 @@ class LearnerStore:
             if passed:
                 state = "resolved"
                 newly = row["state"] != "resolved"
+                across = int(session_id is not None and row["resolved_session"] is not None and session_id != row["resolved_session"])
                 self.conn.execute(
                     "UPDATE misconception_state SET recheck_done=1, state=?,"
-                    " resolved_count=resolved_count+?, resolved_at=COALESCE(resolved_at, ?) WHERE learner=? AND misconception=?",
-                    (state, int(newly), now, learner, m))
+                    " resolved_count=resolved_count+?, resolved_at=COALESCE(resolved_at, ?),"
+                    " held_across_sessions=MAX(held_across_sessions, ?) WHERE learner=? AND misconception=?",
+                    (state, int(newly), now, across, learner, m))
             else:
                 state = "recurring"
                 self.conn.execute(
@@ -155,8 +188,8 @@ class LearnerStore:
                 due = self.attempt_count(learner) + RECHECK_GAP
                 self.conn.execute(
                     "UPDATE misconception_state SET state=?, probes_passed=?, resolved_count=resolved_count+1, resolved_at=?,"
-                    " recheck_due_after=?, recheck_done=0 WHERE learner=? AND misconception=?",
-                    (state, passed_n, now, due, learner, m))
+                    " recheck_due_after=?, recheck_done=0, resolved_session=? WHERE learner=? AND misconception=?",
+                    (state, passed_n, now, due, session_id, learner, m))
             else:
                 state = "improving"
                 self.conn.execute("UPDATE misconception_state SET state=?, probes_passed=? WHERE learner=? AND misconception=?",
@@ -179,12 +212,20 @@ class LearnerStore:
                           (due, learner, m))
         self.conn.commit()
 
-    def recheck_candidates(self, learner: str) -> list[str]:
+    def recheck_candidates(self, learner: str, session_id: int | None = None) -> list[str]:
         n = self.attempt_count(learner)
         rows = self.conn.execute(
             "SELECT misconception FROM misconception_state WHERE learner=? AND state IN ('resolved','improving') AND recheck_done=0"
             " AND recheck_due_after IS NOT NULL AND recheck_due_after <= ? ORDER BY last_detected", (learner, n)).fetchall()
-        return [r["misconception"] for r in rows]
+        out = [r["misconception"] for r in rows]
+        if session_id is not None:
+            # Cross-session memory: anything resolved in an EARLIER session and not yet re-verified in this one
+            rows2 = self.conn.execute(
+                "SELECT misconception FROM misconception_state WHERE learner=? AND state='resolved'"
+                " AND resolved_session IS NOT NULL AND resolved_session <> ? AND held_across_sessions=0 ORDER BY resolved_at",
+                (learner, session_id)).fetchall()
+            out += [r["misconception"] for r in rows2 if r["misconception"] not in out]
+        return out
 
     # ---------------- feedback (open question §15) ----------------
     def add_feedback(self, learner: str, attempt_id: int, suggested_label: str, note: str) -> int:
@@ -192,6 +233,37 @@ class LearnerStore:
                                 (learner, attempt_id, suggested_label, note, time.time()))
         self.conn.commit()
         return int(cur.lastrowid)
+
+    def unlabelled_attempts(self, limit: int = 200) -> list[dict]:
+        rows = self.conn.execute(
+            "SELECT a.id, a.learner, a.item_id, a.choice, a.explanation, a.status, a.label AS model_label, a.model_confidence, a.mode, a.ts, a.image_id, a.input_method"
+            " FROM attempts a LEFT JOIN labels l ON l.attempt_id=a.id WHERE l.attempt_id IS NULL AND a.phase='question'"
+            " AND length(a.explanation) > 0 ORDER BY a.id DESC LIMIT ?", (limit,)).fetchall()
+        return [dict(r) for r in rows]
+
+    def set_label(self, attempt_id: int, label: str, by: str = "teacher") -> None:
+        self.conn.execute("INSERT OR REPLACE INTO labels(attempt_id, label, labelled_by, ts) VALUES (?,?,?,?)",
+                          (attempt_id, label, by, time.time()))
+        self.conn.commit()
+
+    def labelled_rows(self) -> list[dict]:
+        rows = self.conn.execute(
+            "SELECT a.id AS attempt_id, a.item_id, a.choice, a.explanation, a.correct, a.label AS model_label, l.label, a.mode"
+            " FROM labels l JOIN attempts a ON a.id=l.attempt_id ORDER BY a.id").fetchall()
+        return [dict(r) for r in rows]
+
+    def recent_activity(self, limit: int = 15) -> list[dict]:
+        """Latest attempts across all learners, newest first (live feed on the Teacher tab)."""
+        rows = self.conn.execute(
+            "SELECT id, learner, ts, phase, item_id, status, label, target, resolved FROM attempts ORDER BY id DESC LIMIT ?",
+            (limit,)).fetchall()
+        return [dict(r) for r in rows]
+
+    def unknown_explanations(self, limit: int = 500) -> list[dict]:
+        rows = self.conn.execute(
+            "SELECT id, learner, item_id, choice, explanation FROM attempts WHERE status='unknown' AND length(explanation) > 12"
+            " ORDER BY id DESC LIMIT ?", (limit,)).fetchall()
+        return [dict(r) for r in rows]
 
     def export_feedback_rows(self) -> list[dict]:
         rows = self.conn.execute(
@@ -218,6 +290,9 @@ class LearnerStore:
             "flawed_reasoning": sum(1 for a in final if a["status"] == "flawed_reasoning"),
             "unknown": sum(1 for a in questions if a["status"] == "unknown"),
             "elaborated": sum(1 for grp in by_item.values() if len(grp) > 1),
+            "sessions": self.session_count(learner),
+            "avg_time_s": (sum((a["time_ms"] or 0) for a in questions) / 1000 / len(questions)) if questions else None,
+            "hesitant": sum(1 for a in questions if (a["edits"] or 0) >= 6 or (a["time_ms"] or 0) > 90000),
             "explained_share": (sum(1 for a in attempts if len(a["explanation"].split()) >= 3) / len(attempts)) if attempts else None,
             "misconceptions": [
                 {
@@ -226,6 +301,8 @@ class LearnerStore:
                     "probes_passed": s["probes_passed"], "probes_failed": s["probes_failed"],
                     "probes_required": PROBES_REQUIRED,
                     "confidently_held": bool(s["confidently_held"]),
+                    "held_across_sessions": bool(s["held_across_sessions"]),
+                    "resolved_session": s["resolved_session"],
                     "recheck_pending": bool(s["state"] == "resolved" and not s["recheck_done"]),
                     "first_detected": s["first_detected"], "last_detected": s["last_detected"],
                 }
@@ -234,7 +311,8 @@ class LearnerStore:
             "timeline": [
                 {"id": a["id"], "phase": a["phase"], "item_id": a["item_id"], "status": a["status"], "label": a["label"],
                  "confidence": a["model_confidence"], "target": a["target"], "resolved": a["resolved"],
-                 "self_confidence": a["self_confidence"], "ts": a["ts"]}
+                 "self_confidence": a["self_confidence"], "ts": a["ts"], "time_ms": a["time_ms"], "edits": a["edits"],
+                 "mode": a["mode"], "session_id": a["session_id"], "input_method": a["input_method"], "image_id": a["image_id"]}
                 for a in attempts
             ],
         }
@@ -251,9 +329,24 @@ class LearnerStore:
             d["confidently_held"] += r["ch"] or 0
         status_counts = dict(self.conn.execute(
             "SELECT status, COUNT(*) FROM attempts WHERE phase='question' GROUP BY status").fetchall())
+        heat = self.conn.execute(
+            "SELECT learner, misconception, state, detected_count, confidently_held FROM misconception_state").fetchall()
+        heatmap = {}
+        for r in heat:
+            heatmap.setdefault(r["learner"], {})[r["misconception"]] = {"state": r["state"], "detected": r["detected_count"],
+                                                                        "confidently_held": bool(r["confidently_held"])}
+        exposure = self.conn.execute(
+            "SELECT item_id, label, COUNT(*) n FROM attempts WHERE phase='question' AND status IN ('misconception','flawed_reasoning')"
+            " GROUP BY item_id, label ORDER BY n DESC LIMIT 12").fetchall()
+        certain = self.conn.execute(
+            "SELECT learner, misconception, state FROM misconception_state WHERE confidently_held=1 ORDER BY learner").fetchall()
         return {"learners": len(learners), "learner_names": learners, "misconceptions": freq,
                 "question_status_counts": status_counts,
-                "attempts": self.attempt_count_all()}
+                "attempts": self.attempt_count_all(),
+                "heatmap": heatmap,
+                "exposure": [dict(r) for r in exposure],
+                "confidently_held": [dict(r) for r in certain],
+                "labelled": int(self.conn.execute("SELECT COUNT(*) FROM labels").fetchone()[0])}
 
     def attempt_count_all(self) -> int:
         return int(self.conn.execute("SELECT COUNT(*) FROM attempts").fetchone()[0])

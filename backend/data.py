@@ -831,12 +831,165 @@ PROBES: dict[str, list[dict]] = {
 }
 
 # ---------------------------------------------------------------------------
+# 5. Working-mode items: the learner types a NUMBER and shows their WORKING.
+#    Diagnosis reads the working (patterns + the text classifier), not just the number.
+#    pattern: regex over the normalised working -> misconception
+# ---------------------------------------------------------------------------
+
+WORKING_QUESTIONS: list[dict] = [
+    {
+        "id": "W01", "topic": "newton2", "kind": "working", "concept": "const_force_accel",
+        "prompt": "A 2 kg box on a frictionless floor is pushed with a constant net force of 6 N. What is its speed after 4 s, starting from rest?",
+        "unit": "m/s", "answer_value": 12.0, "tolerance": 0.3,
+        "hint": "Show each step: what you compute first, which formula, then the number.",
+        "patterns": [
+            {"regex": r"(v|speed|velocity)\s*=\s*(f|force)\s*/\s*(m|mass)|6\s*/\s*2\s*=\s*3\s*(m/s|$)|speed\s*(is|=)\s*3\b", "misconception": "FORCE_VELOCITY",
+             "why": "The working divides force by mass and calls the result a speed. F/m is an acceleration (3 m/s²), and speed grows with time: v = a·t."},
+            {"regex": r"constant (force|push).{0,30}constant (speed|velocity)|speed (stays|remains|is) (the same|constant)", "misconception": "FORCE_VELOCITY",
+             "why": "A constant force keeps changing the velocity; it does not fix it."},
+        ],
+        "worked": ["a = F/m = 6 N / 2 kg = 3 m/s²", "v = u + a·t = 0 + 3 × 4 = 12 m/s"],
+        "ctx": {"obj": "the box", "moment": "after 4 s", "agent": "the push", "surface": "the floor"},
+    },
+    {
+        "id": "W02", "topic": "freefall", "kind": "working", "concept": "same_accel_free_fall",
+        "prompt": "A 10 kg stone and a 1 kg stone are dropped together from rest (no air). What is the acceleration of the 10 kg stone? (g = 9.8 m/s²)",
+        "unit": "m/s²", "answer_value": 9.8, "tolerance": 0.2,
+        "hint": "Write the force on the stone and then divide by its mass.",
+        "patterns": [
+            {"regex": r"(a|accel\w*)\s*=\s*(m|mass)\s*[x×*]\s*g|=\s*98\b|10\s*[x×*]\s*9\.8\s*=\s*98\s*(m/s|$)", "misconception": "HEAVIER_FASTER",
+             "why": "m·g is the weight (a force, 98 N), not the acceleration. Divide by the mass again: a = mg/m = g."},
+            {"regex": r"(heavier|more mass|bigger mass|10 kg).{0,40}(faster|more accel|bigger accel|larger accel)|ten times (the )?accel", "misconception": "HEAVIER_FASTER",
+             "why": "The 10 kg stone is pulled with ten times the force but has ten times the inertia; the two cancel."},
+        ],
+        "worked": ["Weight F = m·g = 10 × 9.8 = 98 N", "a = F/m = 98 / 10 = 9.8 m/s² (the same for the 1 kg stone: 9.8 / 1 = 9.8 m/s²)"],
+        "ctx": {"obj": "the 10 kg stone", "other": "the 1 kg stone", "moment": "while falling", "agent": "gravity", "surface": "the ground"},
+    },
+    {
+        "id": "W03", "topic": "newton3", "kind": "working", "concept": "third_law_equal",
+        "prompt": "A 4000 kg truck hits a 1000 kg car. The truck exerts 40 000 N on the car. How large is the force the car exerts on the truck, in N?",
+        "unit": "N", "answer_value": 40000.0, "tolerance": 1.0,
+        "hint": "Say which law you used and why the masses do or do not matter.",
+        "patterns": [
+            {"regex": r"40\s*000\s*/\s*4|=\s*10\s*000\b|1000\s*/\s*4000|(quarter|fourth|1/4) of", "misconception": "THIRD_LAW",
+             "why": "The working scales the force by the mass ratio. Masses change the accelerations (a = F/m), never the pair of forces, which are always equal."},
+            {"regex": r"(truck|heavier|bigger).{0,40}(more|larger|bigger|greater) force|car.{0,30}(less|smaller) force", "misconception": "THIRD_LAW",
+             "why": "Newton's third law: the two forces in an interaction are equal in size whatever the masses."},
+        ],
+        "worked": ["Newton's third law: F(car on truck) = F(truck on car) = 40 000 N", "Accelerations differ: car 40 000/1000 = 40 m/s², truck 40 000/4000 = 10 m/s²"],
+        "ctx": {"obj": "the truck", "other": "the car", "moment": "during the crash", "agent": "the truck", "surface": "the road"},
+    },
+    {
+        "id": "W04", "topic": "kinematics", "kind": "working", "concept": "accel_is_g_at_rest",
+        "prompt": "A ball is thrown straight up at 14 m/s. What is its acceleration at the highest point? (take up as positive, g = 9.8 m/s²)",
+        "unit": "m/s²", "answer_value": -9.8, "tolerance": 0.2, "accept_abs": True,
+        "hint": "State the velocity at the top AND the forces acting there.",
+        "patterns": [
+            {"regex": r"(v|velocity|speed)\s*=\s*0.{0,40}(a|accel\w*)\s*=\s*0|(a|accel\w*)\s*=\s*0\b|zero accel|no accel", "misconception": "VA_CONFUSION",
+             "why": "The working sets a = 0 because v = 0. Velocity and acceleration are different quantities; gravity still acts at the top, so a = −9.8 m/s²."},
+            {"regex": r"(force|push) (of|from) the throw|throw(ing)? force|runs? out|used up", "misconception": "IMPETUS",
+             "why": "No throw force exists after release; the only force at the top is gravity."},
+        ],
+        "worked": ["At the top v = 0 for an instant", "The only force is gravity: a = −g = −9.8 m/s² (unchanged throughout the flight)"],
+        "ctx": {"obj": "the ball", "moment": "at the top", "agent": "the throw", "surface": "the ground"},
+    },
+    {
+        "id": "W05", "topic": "newton2", "kind": "working", "concept": "net_force_zero_const_v",
+        "prompt": "A 1200 kg car cruises at a steady 25 m/s on a straight road. Drag and friction total 900 N backward. What is the net force on the car, in N?",
+        "unit": "N", "answer_value": 0.0, "tolerance": 1.0,
+        "hint": "Write the forward force, the backward force, and then the net force.",
+        "patterns": [
+            {"regex": r"net\s*(force)?\s*=\s*(900|1200|30\s*000)\b|(forward|engine).{0,30}(bigger|larger|more than|greater than).{0,20}(drag|friction|900)|=\s*900\s*n?\s*(forward|$)", "misconception": "FORCE_VELOCITY",
+             "why": "The working leaves a forward net force because the car is moving forward. Constant velocity means the forces balance: engine force = 900 N, net = 0."},
+            {"regex": r"(f|force)\s*=\s*m\s*[x×*]\s*v|1200\s*[x×*]\s*25", "misconception": "FORCE_VELOCITY",
+             "why": "F = m·v is not a law. Force relates to acceleration (F = m·a), and here a = 0."},
+        ],
+        "worked": ["Constant velocity ⇒ a = 0", "F_net = m·a = 1200 × 0 = 0 N  (engine force 900 N forward exactly balances 900 N backward)"],
+        "ctx": {"obj": "the car", "moment": "while cruising", "agent": "the engine", "surface": "the road"},
+    },
+]
+
+# ---------------------------------------------------------------------------
+# 6. Free-body-diagram items: the learner DRAWS the forces (third input modality).
+#    diagram = [{"force": name, "direction": up|down|left|right, "size": 1|2|3}, ...]
+#    rules are explainable; an optional sentence disambiguates confusable pairs.
+# ---------------------------------------------------------------------------
+
+FBD_QUESTIONS: list[dict] = [
+    {
+        "id": "F01", "kind": "fbd", "topic": "newton1", "concept": "only_gravity",
+        "prompt": "A ball has just left your hand and is rising. Draw every force acting on it. (Ignore air.)",
+        "object": "ball", "scene": "rising", "motion": "up",
+        "palette": ["gravity", "throw force", "normal force", "air resistance"],
+        "required": [{"force": "gravity", "direction": "down"}],
+        "forbidden": [
+            {"force": "throw force", "misconceptions": ["IMPETUS"],
+             "why": "You drew a ‘throw force’. Which object is applying it now? None — your hand lost contact at release. A force needs a pusher."},
+            {"force": "normal force", "misconceptions": [], "why": "A normal force needs a surface in contact. The ball is in the air."},
+        ],
+        "direction_rules": [
+            {"force": "gravity", "direction": "up", "misconceptions": ["IMPETUS"],
+             "why": "Gravity never points up. If you felt the ball needed an upward arrow because it is rising, that is the impetus idea: motion does not need a force in its direction."},
+        ],
+        "ideal": [{"force": "gravity", "direction": "down", "size": 2}],
+        "ctx": {"obj": "the ball", "moment": "while rising", "agent": "the throw", "surface": "the ground"},
+    },
+    {
+        "id": "F02", "kind": "fbd", "topic": "newton1", "concept": "inertia",
+        "prompt": "A hockey puck slides across frictionless ice at constant velocity (to the right). Draw all the forces on it.",
+        "object": "puck", "scene": "sliding", "motion": "right",
+        "palette": ["gravity", "normal force", "forward push", "friction"],
+        "required": [{"force": "gravity", "direction": "down"}, {"force": "normal force", "direction": "up"}],
+        "forbidden": [
+            {"force": "forward push", "misconceptions": ["FORCE_VELOCITY", "IMPETUS"],
+             "why": "You drew a forward force. Nothing is pushing the puck: no force is needed to keep it moving (Newton's first law). If you meant the ‘force of the hit’ still inside it, that is impetus; if you meant ‘moving needs a force’, that is force→velocity."},
+            {"force": "friction", "misconceptions": [], "why": "The ice is frictionless here, so there is no friction arrow."},
+        ],
+        "direction_rules": [],
+        "ideal": [{"force": "gravity", "direction": "down", "size": 2}, {"force": "normal force", "direction": "up", "size": 2}],
+        "ctx": {"obj": "the puck", "moment": "while sliding", "agent": "the hit", "surface": "the ice"},
+    },
+    {
+        "id": "F03", "kind": "fbd", "topic": "newton2", "concept": "net_force_zero_const_v",
+        "prompt": "A car cruises at a steady 80 km/h to the right. Draw the horizontal forces on it, choosing their sizes carefully.",
+        "object": "car", "scene": "cruising", "motion": "right",
+        "palette": ["engine force", "drag + friction", "gravity", "normal force"],
+        "required": [{"force": "engine force", "direction": "right"}, {"force": "drag + friction", "direction": "left"}],
+        "forbidden": [],
+        "direction_rules": [],
+        "size_rules": [
+            {"bigger": "engine force", "smaller": "drag + friction", "misconceptions": ["FORCE_VELOCITY"],
+             "why": "You drew the engine force larger than drag. A larger forward force would make the car speed up. Steady 80 km/h means the two are exactly equal — net force zero."},
+        ],
+        "ideal": [{"force": "engine force", "direction": "right", "size": 2}, {"force": "drag + friction", "direction": "left", "size": 2}],
+        "ctx": {"obj": "the car", "moment": "while cruising", "agent": "the engine", "surface": "the road"},
+    },
+    {
+        "id": "F04", "kind": "fbd", "topic": "kinematics", "concept": "accel_is_g_at_rest",
+        "prompt": "A ball thrown upward is at the very top of its flight, momentarily at rest. Draw the forces acting on it.",
+        "object": "ball", "scene": "top", "motion": "none",
+        "palette": ["gravity", "throw force", "normal force", "air resistance"],
+        "required": [{"force": "gravity", "direction": "down"}],
+        "forbidden": [
+            {"force": "throw force", "misconceptions": ["IMPETUS"], "why": "No throw force exists after release — nothing is applying it."},
+        ],
+        "direction_rules": [],
+        "empty_rule": {"misconceptions": ["VA_CONFUSION"],
+                       "why": "You drew no forces because the ball is momentarily still. But gravity acts at every instant — that is exactly why the ball is about to fall. Zero velocity does not mean zero force or zero acceleration."},
+        "ideal": [{"force": "gravity", "direction": "down", "size": 2}],
+        "ctx": {"obj": "the ball", "moment": "at the top", "agent": "the throw", "surface": "the ground"},
+    },
+]
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
 QUESTION_INDEX: dict[str, dict] = {q["id"]: q for q in QUESTIONS}
 PROBE_INDEX: dict[str, dict] = {p["id"]: p for plist in PROBES.values() for p in plist}
-ITEM_INDEX: dict[str, dict] = {**QUESTION_INDEX, **PROBE_INDEX}
+WORKING_INDEX: dict[str, dict] = {w["id"]: w for w in WORKING_QUESTIONS}
+FBD_INDEX: dict[str, dict] = {f["id"]: f for f in FBD_QUESTIONS}
+ITEM_INDEX: dict[str, dict] = {**QUESTION_INDEX, **PROBE_INDEX, **WORKING_INDEX, **FBD_INDEX}
 
 # Sentence starters shown in the UI to reduce vague explanations (risk mitigation)
 SENTENCE_STARTERS = [
@@ -849,8 +1002,15 @@ SENTENCE_STARTERS = [
 
 def public_item(item: dict) -> dict:
     """Strip the answer key and misconception maps before sending to the browser (privacy NFR)."""
+    if item.get("kind") == "working":
+        return {"id": item["id"], "topic": item.get("topic"), "kind": "working", "prompt": item["prompt"],
+                "unit": item["unit"], "hint": item["hint"]}
+    if item.get("kind") == "fbd":
+        return {"id": item["id"], "topic": item.get("topic"), "kind": "fbd", "prompt": item["prompt"],
+                "object": item["object"], "scene": item["scene"], "motion": item["motion"], "palette": item["palette"]}
     return {
         "id": item["id"],
+        "kind": "choice",
         "topic": item.get("topic", "transfer"),
         "context": item.get("context"),
         "prompt": item["prompt"],
@@ -867,6 +1027,17 @@ def option_of(item: dict, key: str) -> dict | None:
 
 def all_misconceptions_for_item(item: dict) -> list[str]:
     seen: list[str] = []
+    if item.get("kind") == "working":
+        for pat in item["patterns"]:
+            if pat["misconception"] not in seen:
+                seen.append(pat["misconception"])
+        return seen
+    if item.get("kind") == "fbd":
+        for rule in item.get("forbidden", []) + item.get("direction_rules", []) + item.get("size_rules", []) + ([item["empty_rule"]] if item.get("empty_rule") else []):
+            for m in rule["misconceptions"]:
+                if m not in seen:
+                    seen.append(m)
+        return seen
     for o in item["options"]:
         for m in o["misconceptions"]:
             if m not in seen:

@@ -55,8 +55,20 @@ TARGETS = {
 
 def option_map(row) -> tuple[list[str], bool]:
     item = ITEM_INDEX[row.item_id]
+    if item.get("kind") == "working":
+        return all_misconceptions_for_item(item), bool(row.correct)
     opt = option_of(item, row.option_key)
     return list(opt["misconceptions"]), bool(row.correct)
+
+
+def served_or(clf):
+    """Model for scoring real rows: trained on all synthetic data and never on real rows,
+    even if the served model was retrained with `train.py --real`."""
+    for name in ("classifier_synthetic.joblib", "classifier.joblib"):
+        p = MODEL_DIR / name
+        if p.exists():
+            return MisconceptionClassifier.load(p)
+    return clf
 
 
 def run_pipeline(clf, df: pd.DataFrame, embedder: DescriptionEmbedder | None = None,
@@ -205,6 +217,26 @@ def main() -> None:
     hans = hres[hres.status != "unknown"]
     metrics["hand_rows_template_only_model"] = {**scores(hans), "abstained": float((hres.status == "unknown").mean())}
 
+    # ---------------- 6b. REAL learner rows (labelled by a teacher in the app, exported via /api/labels/export) ----------------
+    real_path = DATA / "real_responses.csv"
+    if real_path.exists():
+        real = pd.read_csv(real_path)
+        real = real[real.item_id.isin(ITEM_INDEX.keys())]
+        other = real[real.label == "OTHER"]  # labeller: fits none of the known misconceptions
+        real = real[real.label != "OTHER"]
+        other_false_alarm = None
+        if len(other):  # how often the model invents a known misconception where the labeller saw none
+            ores = run_pipeline(served_or(clf), other, cfg=cfg)
+            other_false_alarm = float(ores.status.isin(["misconception", "flawed_reasoning"]).mean())
+        if len(real):
+            rres = run_pipeline(served_or(clf), real, cfg=cfg)
+            rans = rres[rres.status != "unknown"]
+            metrics["real_rows"] = {**scores(rans), "abstained": float((rres.status == "unknown").mean()),
+                                    "total": int(len(real)), "other_excluded": int(len(other)),
+                                    "other_false_alarm": other_false_alarm}
+    else:
+        metrics["real_rows"] = None
+
     # ---------------- 7. abstention on vague input ----------------
     vres = run_pipeline(clf, vague, cfg=cfg)
     metrics["vague_abstain_rate"] = float((vres.status == "unknown").mean())
@@ -254,6 +286,10 @@ def write_report(m: dict) -> None:
         f"macro-F1 {m['hand_rows_template_only_model'].get('macro_f1', float('nan')):.3f}, abstained {m['hand_rows_template_only_model']['abstained']:.0%}",
         f"- Flawed-reasoning false-alarm rate: {m['flawed_reasoning_false_alarm_rate']:.3f}",
         f"- Vague explanations sent to *unknown*: {m['vague_abstain_rate']:.0%} (n={m['vague_n']}); abstain rate on valid rows: {m['abstain_rate_on_valid_rows']:.0%}",
+        (f"- **Real learner rows** (teacher-labelled in the app): acc {m['real_rows'].get('accuracy', float('nan')):.3f}, macro-F1 {m['real_rows'].get('macro_f1', float('nan')):.3f}, n={m['real_rows']['total']}, abstained {m['real_rows']['abstained']:.0%}, {m['real_rows'].get('other_excluded', 0)} labelled OTHER (excluded)"
+         + (f"; on OTHER rows the model still named a misconception {m['real_rows']['other_false_alarm']:.0%} of the time"
+            if m['real_rows'].get('other_false_alarm') is not None else "")
+         if m.get("real_rows") else "- Real learner rows: none labelled yet (Teacher tab → Label real responses → Export)"),
         "",
         "## Unseen misconception (leave-one-misconception-out, embedding fallback)",
         "| Held out | n | top-1 | top-1 when answered | abstained | false-positive rate |", "|---|---|---|---|---|---|",
