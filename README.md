@@ -204,6 +204,8 @@ python run.py --retrain         # everything from scratch
 python ml/train_deberta.py      # optional: pip install torch transformers datasets accelerate sentencepiece
 ```
 
+**AI tutor:** copy `.env.example` to `.env` and set `GEMINI_API_KEY` (free at aistudio.google.com); check it with `python -m backend.llm`. Without a key everything works offline.
+
 Environment knobs: `RELEARN_TEACHER_PIN` (default `1234`; unlocks the Teacher tab and its API), `RELEARN_PROBES_REQUIRED` (default 2), `RELEARN_RECHECK_GAP` (default 2 attempts), `RELEARN_DB` (SQLite path), `RELEARN_BACKEND=sklearn|auto`, `RELEARN_EMBEDDER=tfidf|st`, `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` (optional: GPT-style generated tutor replies, no extra packages; Anthropic key also enables handwriting transcription with `pip install anthropic`), `RELEARN_LLM_MODEL`, `OPENAI_BASE_URL`.
 
 Voice input uses the browser's speech recognition (Chrome / Edge). Photo OCR loads Tesseract.js from a CDN the first time it is used; without internet, type the text from the photo.

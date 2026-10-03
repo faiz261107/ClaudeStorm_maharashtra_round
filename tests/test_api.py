@@ -18,6 +18,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 os.environ["RELEARN_DB"] = str(ROOT / "tests" / "_test.db")
 os.environ.setdefault("RELEARN_BACKEND", "sklearn")
+for _k in ("GEMINI_API_KEY", "GOOGLE_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY"):
+    os.environ.pop(_k, None)  # tests never call a real LLM
 
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -347,3 +349,30 @@ def test_live_activity_feed(client):
 def test_tutor_answers_capability_questions(client):
     r = client.post("/api/ask", json={"text": "what all can u explain"}).json()
     assert r["intent"] == "capabilities" and "Newton" in r["reply"]
+
+
+# ---------------------------------------------------------------- AI tutor (LLM), faked: tests never hit the network
+
+def test_ask_uses_llm_with_history_and_falls_back(client, monkeypatch):
+    from backend import llm
+    seen = {}
+
+    def fake_generate(prompt, max_tokens=400, system=None, history=None):
+        seen.update(prompt=prompt, system=system, history=history)
+        return "**Inertia** is resistance to a change in motion."
+
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    monkeypatch.setattr(llm, "generate", fake_generate)
+    hist = [{"role": "user", "content": "what is a force?"}, {"role": "assistant", "content": "A push or a pull."}]
+    r = client.post("/api/ask", json={"text": "and what is inertia?", "item_id": "Q01", "history": hist}).json()
+    assert r["generated"] and r["reply"] == "Inertia is resistance to a change in motion."  # markdown stripped
+    assert seen["history"] == hist and "do not answer it" in seen["prompt"] and "NEVER say which option" in seen["system"]
+
+    monkeypatch.setattr(llm, "generate", lambda *a, **k: None)  # LLM down -> offline knowledge base
+    r = client.post("/api/ask", json={"text": "what is inertia?"}).json()
+    assert not r["generated"] and "inertia" in r["reply"].lower()
+
+
+def test_no_key_means_offline_tutor(client):
+    r = client.post("/api/ask", json={"text": "what is inertia?"}).json()
+    assert r["generated"] is False

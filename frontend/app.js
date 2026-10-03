@@ -95,14 +95,25 @@
       const v = speechSynthesis.getVoices().find((x) => /en-IN/.test(x.lang)) || speechSynthesis.getVoices().find((x) => /^en/.test(x.lang)); if (v) u.voice = v;
       speechSynthesis.speak(u);
     }
+    const history = [];  // earlier turns, so follow-ups like "why?" or "explain simpler" make sense to the AI tutor
     function add(role, text, meta) {
       const d = document.createElement("div"); d.className = `ask-m ${role}`; d.innerHTML = `<div>${esc(text)}</div>${meta ? `<div class="tiny muted">${esc(meta)}</div>` : ""}`;
-      log.appendChild(d); while (log.children.length > 8) log.removeChild(log.firstChild); log.scrollTop = log.scrollHeight;
+      log.appendChild(d); while (log.children.length > 12) log.removeChild(log.firstChild); log.scrollTop = log.scrollHeight;
+      return d;
     }
+    let busy = false;
     async function ask(text) {
-      if (!text.trim()) return; add("me", text); input.value = "";
-      try { const r = await api("/api/ask", { text, item_id: S.current?.id || null }); add("bot", r.reply, r.sources?.length ? `from: ${r.sources.join(", ")}` : ""); say(r.reply); }
-      catch (err) { add("bot", `Sorry — ${err.message}`); }
+      text = text.trim(); if (!text || busy) return;
+      busy = true; add("me", text); input.value = ""; input.disabled = true;
+      const typing = add("bot thinking", "Thinking…");
+      try {
+        const r = await api("/api/ask", { text, item_id: S.current?.id || null, history: history.slice(-8) });
+        typing.remove();
+        add("bot", r.reply, r.generated ? "AI tutor" : r.sources?.length ? `from: ${r.sources.join(", ")}` : "");
+        history.push({ role: "user", content: text }, { role: "assistant", content: r.reply });
+        say(r.reply);
+      } catch (err) { typing.remove(); add("bot", `Sorry — ${err.message}`); }
+      finally { busy = false; input.disabled = false; input.focus(); }
     }
     form.addEventListener("submit", (e) => { e.preventDefault(); ask(input.value); });
     mic.addEventListener("click", () => {
@@ -695,7 +706,7 @@
 
   // ---------------- boot ----------------
   async function boot() {
-    try { const [tax, health] = await Promise.all([api("/api/misconceptions"), api("/api/health")]); S.taxonomy = tax; $("#modelName").textContent = `${health.model.backend} · ${health.probes_required} probes to resolve`; }
+    try { const [tax, health] = await Promise.all([api("/api/misconceptions"), api("/api/health")]); S.taxonomy = tax; $("#modelName").textContent = `${health.model.backend} · ${health.probes_required} probes to resolve${health.llm?.provider ? ` · AI tutor: ${health.llm.model}` : ""}`; }
     catch (err) { toast(`API not reachable: ${err.message}`, 6000); }
     showStart();
   }

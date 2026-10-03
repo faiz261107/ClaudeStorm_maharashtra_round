@@ -52,7 +52,8 @@ from backend.diagnosis import get_diagnoser  # noqa: E402
 from backend.learner_model import MAX_PROBES, PROBES_REQUIRED, RECHECK_GAP, get_store  # noqa: E402
 from backend.personalise import personalise  # noqa: E402
 from backend.tutor_response import compose as compose_tutor, analyse as analyse_explanation  # noqa: E402
-from backend.chat_nlp import understand  # noqa: E402
+from backend import llm  # noqa: E402
+from backend.chat_nlp import llm_chat, understand  # noqa: E402
 
 FRONTEND = ROOT / "frontend"
 REPORTS = ROOT / "ml" / "reports"
@@ -112,9 +113,15 @@ class AnalyseIn(BaseModel):
     item_id: Optional[str] = None
 
 
+class ChatTurn(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(max_length=2000)
+
+
 class AskIn(BaseModel):
-    text: str
+    text: str = Field(max_length=1000)
     item_id: Optional[str] = None
+    history: list[ChatTurn] = Field(default_factory=list)  # earlier turns of the tutor chat, oldest first
 
 
 class LabelIn(BaseModel):
@@ -182,7 +189,8 @@ def index():
 @app.get("/api/health")
 def health():
     d = get_diagnoser()
-    return {"ok": True, "model": d.info(), "probes_required": PROBES_REQUIRED, "recheck_gap": RECHECK_GAP,
+    return {"ok": True, "model": d.info(), "llm": {"provider": llm.available(), "model": llm.model_name()},
+            "probes_required": PROBES_REQUIRED, "recheck_gap": RECHECK_GAP,
             "questions": len(QUESTIONS), "misconceptions": len(MISCONCEPTIONS)}
 
 
@@ -687,6 +695,12 @@ def ask_tutor(body: AskIn):
     """Small voice chatbot: physics questions answered from the knowledge base; everything else redirected politely."""
     item = ITEM_INDEX.get(body.item_id) if body.item_id else None
     u = understand(body.text, item, phase="ask", context=item["prompt"] if item else "")
+    if u["intent"] != "command" and body.text.strip() and llm.available():
+        history = [{"role": t.role, "content": t.content[:800]} for t in body.history[-8:]]
+        reply = llm_chat(body.text.strip(), history, item)
+        if reply:
+            return {"reply": reply, "intent": "llm", "sources": [], "generated": True}
+        # LLM down or out of quota: fall through to the offline knowledge base below
     if u["intent"] == "question":
         return {"reply": u["reply"], "intent": "question",
                 "sources": [MISCONCEPTIONS[x]["name"] if x in MISCONCEPTIONS else x for x in u.get("sources", [])],

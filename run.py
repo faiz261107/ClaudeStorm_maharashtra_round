@@ -59,6 +59,10 @@ def main() -> None:
     ap.add_argument("--host", default="127.0.0.1")
     a = ap.parse_args()
 
+    from backend.llm import available, load_dotenv, model_name
+    load_dotenv()  # GEMINI_API_KEY etc. from .env (never committed)
+    print(f"==> AI tutor: {available()} ({model_name()})" if available() else
+          "==> AI tutor: off (offline answers). Add GEMINI_API_KEY to .env to switch it on.")
     try:
         import fastapi, sklearn, uvicorn  # noqa: F401
     except ImportError:

@@ -445,3 +445,4 @@ a { color: var(--blue); }
 .feed li.flawed_reasoning { border-left-color: var(--purple); }
 .feed li.unknown { border-left-color: var(--blue); }
 @media (prefers-reduced-motion: reduce) { .live-pill i { animation: none; } }
+.ask-m.thinking { opacity: .7; font-style: italic; }

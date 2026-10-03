@@ -13,7 +13,6 @@ Returns a dict the frontend renders above the standard intervention:
 
 from __future__ import annotations
 
-import os
 import re
 
 # Phrases that typically carry each misconception, with a one-line reply to that exact phrase.
@@ -92,15 +91,10 @@ def personalise(label: str, explanation: str, misconception: dict, intervention:
 
 def _llm_rewrite(label: str, quote: str, misconception: dict, intervention: dict, item_prompt: str) -> str | None:
     """Optional: rewrite the bridge with an LLM, grounded in the learner's own sentence. Never required."""
-    key = os.environ.get("ANTHROPIC_API_KEY")
-    if not key or not quote:
+    from backend.llm import available, generate
+    if not available() or not quote:
         return None
     try:
-        import anthropic  # type: ignore
-    except ImportError:
-        return None
-    try:
-        client = anthropic.Anthropic(api_key=key)
         prompt = (
             "You are a physics tutor. A learner answered this question:\n"
             f"{item_prompt}\n\nThey explained: \"{quote}\"\n\n"
@@ -110,9 +104,6 @@ def _llm_rewrite(label: str, quote: str, misconception: dict, intervention: dict
             "misconception and say why it feels right, and (2) correct it in plain language, ending with one question they can "
             "ask themselves next time. Address the learner as 'you'. No headings, no bullet points."
         )
-        msg = client.messages.create(model=os.environ.get("RELEARN_LLM_MODEL", "claude-sonnet-4-5"), max_tokens=300,
-                                     messages=[{"role": "user", "content": prompt}])
-        text = "".join(getattr(b, "text", "") for b in msg.content).strip()
-        return text or None
+        return generate(prompt, max_tokens=300)
     except Exception:
         return None

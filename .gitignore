@@ -8,3 +8,6 @@ ml/models/deberta/
 ml/models/checkpoints/
 .pytest_cache/
 .DS_Store
+
+# API keys stay on this PC only
+.env
