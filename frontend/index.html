@@ -5,20 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <script>try{const t=localStorage.getItem('relearn-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
-  <title>Re:Learn — it tells you why</title>
+  <title>Re:Learn — fix the thinking, not just the answer</title>
   <meta name="description" content="An AI tutor that finds the misconception behind a wrong answer, fixes it, and proves the fix stuck.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400;9..144,600;9..144,700,50&family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/styles.css">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23141a33'/%3E%3Ccircle cx='16' cy='12' r='5' fill='%23f7f4ee'/%3E%3Cpath d='M16 18v8M12 22l4 4 4-4' stroke='%23f59e0b' stroke-width='2.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/svg+xml" href="/static/logo.svg">
 </head>
 <body>
   <a class="skip" href="#stage">Skip to content</a>
 
   <header class="topbar">
     <div class="brand" aria-label="Re:Learn">
-      <span class="brand-mark" aria-hidden="true"></span>
-      <span class="brand-name">Re<span class="colon">:</span>Learn</span>
+      <img class="brand-mark" src="/static/logo.svg" alt="" aria-hidden="true">
+      <span class="brand-text">
+        <span class="brand-name">Re<span class="colon">:</span>Learn</span>
+        <span class="brand-tagline">Fix the thinking, not just the answer.</span>
+      </span>
     </div>
 
     <nav class="tabs" aria-label="Sections">
@@ -89,6 +92,7 @@
     <!-- ============ ABOUT ============ -->
     <section class="panel" id="tab-about" hidden>
       <div class="stage about">
+        <p class="about-kicker">Fix the thinking, not just the answer.</p>
         <h1 class="h-display">Re:Learn doesn't tell you that you're wrong.<br>It tells you <em>why</em>, fixes that, and checks that the fix stuck.</h1>
         <p class="lede">Most platforms grade right/wrong and show the solution. That throws away the most useful thing a wrong answer carries: which mistaken idea produced it.</p>
 

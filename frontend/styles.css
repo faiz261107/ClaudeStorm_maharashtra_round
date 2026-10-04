@@ -69,9 +69,10 @@ a { color: var(--blue); }
   border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20;
 }
 .brand { display: flex; align-items: center; gap: .55rem; font-family: var(--font-display); font-weight: 700; font-size: 1.45rem; }
-.brand-mark { width: 30px; height: 30px; border-radius: 9px; background: var(--ink); position: relative; flex: none; }
-.brand-mark::before { content: ""; position: absolute; left: 10px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--paper); }
-.brand-mark::after { content: ""; position: absolute; left: 14px; top: 17px; width: 2px; height: 8px; background: var(--amber); border-radius: 2px; box-shadow: -4px 4px 0 -1px var(--amber), 4px 4px 0 -1px var(--amber); }
+.brand-mark { width: 34px; height: 34px; flex: none; display: block; }
+.brand-text { display: flex; flex-direction: column; line-height: 1.05; }
+.brand-tagline { font: 500 .72rem var(--font-ui); color: var(--muted); letter-spacing: .01em; margin-top: .2rem; }
+.about-kicker { font: 600 .8rem var(--font-ui); text-transform: uppercase; letter-spacing: .08em; color: var(--purple); margin: 0 0 .6rem; }
 .colon { color: var(--amber); }
 .tabs { display: flex; gap: .2rem; margin-left: auto; flex-wrap: wrap; }
 .tab { border: 0; background: transparent; font: 500 .95rem var(--font-ui); color: var(--ink-2); padding: .45rem .8rem; border-radius: 999px; cursor: pointer; }
@@ -301,6 +302,7 @@ a { color: var(--blue); }
   body { font-size: 16px; }
   .topbar { padding: .6rem 1rem; gap: .5rem .6rem; flex-wrap: wrap; position: static; }
   .brand-name { font-size: 1.2rem; }
+  .brand-tagline { display: none; }
   .learner-chip { margin-left: auto; }
   .tabs { width: 100%; order: 3; flex-wrap: nowrap; overflow-x: auto; margin-left: 0; padding-bottom: 2px; scrollbar-width: none; }
   .tab { padding: .4rem .7rem; font-size: .88rem; white-space: nowrap; }

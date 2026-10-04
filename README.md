@@ -1,5 +1,7 @@
 # Re:Learn — Adaptive Multimodal Learning Environment
 
+**Fix the thinking, not just the answer.**
+
 > **Re:Learn doesn't tell you that you're wrong. It tells you *why*, fixes that, and checks that the fix stuck.**
 
 An AI tutor for introductory mechanics that reads a learner's *answer and explanation together*, names the misconception behind the response, delivers a targeted intervention (explanation + worked example + physics animation), and verifies the fix with transfer questions in new contexts — resolved only when the answer is right **and** the reasoning is clean, twice, plus a delayed recheck.
